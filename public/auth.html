@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UNO Web - Connexion</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="/">UNO<span>+</span></a>
+        <div class="top-actions">
+          <a class="glass-btn" href="/">Accueil</a>
+          <button class="danger-btn" id="logoutBtn">Déconnexion</button>
+        </div>
+      </header>
+
+      <section class="hero" style="margin-bottom:22px;">
+        <div class="pretitle">Connexion / inscription</div>
+        <h1 style="font-size: clamp(44px, 8vw, 78px);">Entre dans la partie</h1>
+      </section>
+
+      <div class="layout-center"><div id="currentUserBox" style="max-width:860px; width:100%; margin-bottom:16px;"></div></div>
+
+      <section class="auth-grid">
+        <article class="panel">
+          <h2 class="page-title" style="font-size:36px; margin-top:0;">Connexion</h2>
+          <p class="section-subtitle">Reprends ta place à la table.</p>
+          <form id="loginForm">
+            <div class="form-row">
+              <label for="loginUsername">Pseudo</label>
+              <input class="input" id="loginUsername" name="username" placeholder="ShortBoomer" required />
+            </div>
+            <div class="form-row">
+              <label for="loginPassword">Mot de passe</label>
+              <input class="input" id="loginPassword" name="password" type="password" placeholder="••••••••" required />
+            </div>
+            <button class="primary-btn" type="submit">Se connecter</button>
+          </form>
+          <div id="loginMsg"></div>
+        </article>
+
+        <article class="panel">
+          <h2 class="page-title" style="font-size:36px; margin-top:0;">Inscription</h2>
+          <p class="section-subtitle">Crée ton profil et lance ton premier salon.</p>
+          <form id="registerForm">
+            <div class="form-row">
+              <label for="registerUsername">Pseudo</label>
+              <input class="input" id="registerUsername" name="username" minlength="3" maxlength="20" placeholder="Ton pseudo" required />
+            </div>
+            <div class="form-row">
+              <label for="registerPassword">Mot de passe</label>
+              <input class="input" id="registerPassword" name="password" type="password" minlength="4" placeholder="4 caractères minimum" required />
+            </div>
+            <button class="secondary-btn" type="submit">Créer un compte</button>
+          </form>
+          <div id="registerMsg"></div>
+        </article>
+      </section>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+  </body>
+</html>

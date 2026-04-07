@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UNO Web - Accueil</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand">UNO<span>+</span></div>
+        <div class="top-actions">
+          <button class="glass-btn">🛒 Shop</button>
+          <button class="glass-btn">✨ Studio</button>
+          <button class="glass-btn" id="authBtn">Se connecter</button>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div class="pretitle">Ready to play</div>
+        <h1>UNO Arena</h1>
+      </section>
+
+      <section class="menu-grid">
+        <article class="menu-card profile-card">
+          <div class="avatar">🐧</div>
+          <div class="player-info">
+            <small>Joueur</small>
+            <div class="player-name" id="playerName">Invité</div>
+            <div class="room-meta" style="margin-top: 10px;">
+              <span class="chip">🎲 Casual</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="menu-card quick-card" id="quickGameCard">
+          <div class="menu-card-body">
+            <div><span class="ribbon">▶ Jouez maintenant</span></div>
+            <div class="fake-cards">
+              <div class="fake-card one"></div>
+              <div class="fake-card two"></div>
+              <div class="fake-card center">🎴</div>
+            </div>
+            <div>
+              <div class="menu-card-title">Jeu rapide</div>
+              <p>Rejoins automatiquement une partie et commence à jouer tout de suite.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="menu-card private-card" id="privateGameCard">
+          <div class="menu-card-body">
+            <div style="display:flex; justify-content:flex-end;"><span class="chip" style="background: rgba(0,0,0,0.15);">Entre amis</span></div>
+            <div style="display:flex; justify-content:center; align-items:center; flex:1; font-size:90px;">😎</div>
+            <div>
+              <div class="menu-card-title" style="font-size:54px;">Jeu privé</div>
+              <p>Crée ton salon, partage un code et invite jusqu'à 6 joueurs.</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <div class="page-footer-actions">
+        <button class="big-link" id="browseLobbiesBtn">🌐 Parcourir les salons</button>
+        <div style="margin-top:16px;">
+          <button class="glass-btn" id="rulesBtn">Comment jouer ▼</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="rulesModal">
+      <div class="panel modal-card">
+        <h2 class="page-title" style="font-size:36px; margin-top:0;">Règles rapides</h2>
+        <ul class="rules-list">
+          <li>Joue une carte de même couleur ou de même valeur que la carte du dessus.</li>
+          <li>Les cartes spéciales : ⛔ passe le tour, ↺ inverse le sens, +2 et +4 font piocher.</li>
+          <li>Quand il te reste 2 cartes, clique sur <strong>UNO</strong> avant de jouer l'avant-dernière.</li>
+          <li>Si tu oublies UNO et qu'il te reste 1 carte, tu pioches 2 cartes de pénalité.</li>
+        </ul>
+        <div class="actions-row">
+          <button class="primary-btn" data-close-modal>Fermer</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/app.js"></script>
+  </body>
+</html>
