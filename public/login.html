@@ -43,7 +43,7 @@
         <button class="submit-btn">Se connecter</button>
         <div class="switch-link">
           Pas encore de compte ?
-          <button>S'inscrire</button>
+          <button type="button" id="goRegister">S'inscrire</button>
         </div>
       </div>
 
@@ -70,11 +70,31 @@
         <button class="submit-btn">Créer mon compte</button>
         <div class="switch-link">
           Déjà un compte ?
-          <button>Se connecter</button>
+          <button type="button" id="goLogin">Se connecter</button>
         </div>
       </div>
     </div>
   </div>
+
+  <script>
+    const loginSection = document.getElementById("loginSection");
+    const registerSection = document.getElementById("registerSection");
+    const goRegisterBtn = document.getElementById("goRegister");
+    const goLoginBtn = document.getElementById("goLogin");
+
+    function showRegister() {
+      loginSection.classList.remove("active");
+      registerSection.classList.add("active");
+    }
+
+    function showLogin() {
+      registerSection.classList.remove("active");
+      loginSection.classList.add("active");
+    }
+
+    goRegisterBtn.addEventListener("click", showRegister);
+    goLoginBtn.addEventListener("click", showLogin);
+  </script>
 
 </body>
 </html>
