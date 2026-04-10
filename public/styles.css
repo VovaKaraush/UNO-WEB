@@ -69,6 +69,12 @@ body {
   text-align: center;
 }
 
+.nav-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
 .nav-item .icon {
   font-size: 34px;
   display: block;
