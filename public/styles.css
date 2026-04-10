@@ -42,6 +42,89 @@ body {
   color: #fff;
   min-height: 100vh;
   overflow-x: hidden;
+  position: relative;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  pointer-events: none;
+}
+
+/* Large soft waves */
+body::before {
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at 18% 50%, rgba(255, 210, 120, 0.16) 0%, rgba(255, 210, 120, 0) 55%),
+    radial-gradient(ellipse at 72% 35%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 58%),
+    radial-gradient(ellipse at 55% 80%, rgba(255, 70, 70, 0.2) 0%, rgba(255, 70, 70, 0) 54%),
+    repeating-radial-gradient(
+      circle at 60% 45%,
+      rgba(255, 255, 255, 0.11) 0 2px,
+      rgba(255, 255, 255, 0) 2px 90px
+    );
+  transform-origin: 50% 50%;
+  animation: unoAmbientPulse 10s ease-in-out infinite alternate;
+}
+
+/* Moving streak layer */
+body::after {
+  z-index: 1;
+  background:
+    conic-gradient(
+      from 35deg at 65% 45%,
+      rgba(255, 255, 255, 0.18),
+      rgba(255, 255, 255, 0) 20%,
+      rgba(255, 255, 255, 0.12) 36%,
+      rgba(255, 255, 255, 0) 58%,
+      rgba(255, 255, 255, 0.16) 76%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  mix-blend-mode: screen;
+  opacity: 0.28;
+  filter: blur(1px);
+  transform-origin: 60% 45%;
+  animation: unoAmbientSweep 16s linear infinite;
+}
+
+@keyframes unoAmbientPulse {
+  0% {
+    transform: scale(1) translate3d(0, 0, 0);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.08) translate3d(1.5%, -1.2%, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes unoAmbientSweep {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.06);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    animation: none;
+  }
+}
+
+.page,
+.online-page,
+.auth-container,
+.footer-action {
+  position: relative;
+  z-index: 2;
 }
 
 .page {
