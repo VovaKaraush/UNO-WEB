@@ -1,4 +1,28 @@
-/* Reset and base */
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffe668, #ffc83a);
+  color: #231815;
+  font-size: 18px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  transition: transform 0.14s, box-shadow 0.14s;
+  margin-top: 6px;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.26);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -121,16 +145,28 @@ body {
 
 .grid {
   display: grid;
-  grid-template-columns: 1.25fr 1.25fr 1fr 0.8fr;
+  grid-template-columns: repeat(4, minmax(220px, 300px));
+  justify-content: center;
   gap: 18px;
-  grid-auto-rows: 190px;
+  grid-auto-rows: 275px;
+}
+
+.card-link {
+  display: block;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.card-link .card {
+  height: 100%;
 }
 
 .card {
   position: relative;
   border-radius: 22px;
   border: 6px solid rgba(255, 255, 255, 0.88);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+  grid-auto-rows: 275px;
   overflow: hidden;
   padding: 18px;
   cursor: pointer;
@@ -574,6 +610,7 @@ body {
 @media (max-width: 1100px) {
   .grid {
     grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 320px;
   }
 
   .events {
@@ -597,7 +634,7 @@ body {
 
   .grid {
     grid-template-columns: 1fr;
-    grid-auto-rows: 180px;
+    grid-auto-rows: 260px;
   }
 
   .span-2-row,
@@ -631,3 +668,212 @@ body {
     width: 100%;
   }
 }
+
+/* Login page */
+
+  body.login-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bg-cards {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .bg-card {
+    position: absolute;
+    width: 88px;
+    height: 126px;
+    border-radius: 16px;
+    background: #fff;
+    border: 4px solid rgba(255,255,255,0.9);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+    overflow: hidden;
+    opacity: 0.18;
+  }
+
+  .bg-card::before {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border-radius: 12px;
+  }
+
+  .bg-card::after {
+    content: "";
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 58px; height: 88px;
+    background: rgba(255,255,255,0.18);
+    border: 4px solid rgba(255,255,255,0.82);
+    border-radius: 50%;
+    transform: translate(-50%,-50%) rotate(28deg);
+  }
+
+  .bg-card.c1 { top: 8%; left: 5%; transform: rotate(-18deg); }
+  .bg-card.c1::before { background: linear-gradient(160deg, #ffd84d, #e8b400); }
+
+  .bg-card.c2 { top: 12%; left: 10%; transform: rotate(8deg); }
+  .bg-card.c2::before { background: linear-gradient(160deg, #22b5ff, #0078df); }
+
+  .bg-card.c3 { bottom: 10%; right: 6%; transform: rotate(14deg); }
+  .bg-card.c3::before { background: linear-gradient(160deg, #ff6a6a, #c81916); }
+
+  .bg-card.c4 { bottom: 15%; right: 12%; transform: rotate(-10deg); }
+  .bg-card.c4::before { background: linear-gradient(160deg, #7adf62, #2cae3e); }
+
+  .bg-card.c5 { top: 50%; left: 2%; transform: translateY(-50%) rotate(6deg); }
+  .bg-card.c5::before { background: linear-gradient(160deg, #c472f0, #7a2dd4); }
+
+  .bg-card.c6 { top: 45%; right: 2%; transform: translateY(-50%) rotate(-12deg); }
+  .bg-card.c6::before { background: linear-gradient(160deg, #ffd84d, #e8b400); }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .logo-text {
+    font-size: 72px;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.12);
+    letter-spacing: -2px;
+  }
+
+  .logo-sub {
+    font-size: 15px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.75);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+  }
+
+  .auth-container {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 420px);
+    max-width: 420px;
+    padding: 20px;
+    margin: 0 auto;
+  }
+
+  .auth-card {
+    background: rgba(255,255,255,0.13);
+    border: 4px solid rgba(255,255,255,0.82);
+    border-radius: 28px;
+    box-shadow: 0 20px 48px rgba(0,0,0,0.28);
+    backdrop-filter: blur(12px);
+    padding: 32px 30px 28px;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .tab-btn {
+    padding: 12px;
+    border-radius: 16px;
+    border: 3px solid transparent;
+    font-size: 16px;
+    font-weight: 900;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, color 0.18s;
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.6);
+  }
+
+  .tab-btn.active {
+    background: #fff;
+    color: #c81916;
+    border-color: #fff;
+  }
+
+  .form-section { display: none; }
+  .form-section.active { display: block; }
+
+  .strength-bar {
+    display: none;
+    margin-top: 8px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+
+  .strength-bar.visible { display: block; }
+
+  .strength-fill {
+    height: 100%;
+    border-radius: 999px;
+    width: 0%;
+  }
+
+  .alert {
+    display: none;
+    border-radius: 14px;
+    padding: 13px 16px;
+    font-weight: 900;
+    font-size: 14px;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+
+  .alert.visible { display: block; }
+
+  .alert.success {
+    background: rgba(74, 213, 93, 0.22);
+    border: 2px solid rgba(74, 213, 93, 0.6);
+    color: #b6ffbf;
+  }
+
+  .alert.danger {
+    background: rgba(255, 74, 46, 0.22);
+    border: 2px solid rgba(255, 74, 46, 0.6);
+    color: #ffc4bc;
+  }
+
+  .field-error {
+    display: none;
+    color: #ffe668;
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
+
+  .field-error.visible { display: block; }
+
+  .field input.error {
+    border-color: #ff4a2e;
+    box-shadow: 0 0 0 3px rgba(255, 74, 46, 0.3);
+  }
+
+  .switch-link {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 15px;
+    color: rgba(255,255,255,0.75);
+  }
+
+  .switch-link button {
+    background: none;
+    border: none;
+    color: #ffe668;
+    font-weight: 900;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+  }

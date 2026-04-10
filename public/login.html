@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNO WEB - Connexion</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="login-page">
+
+  <div class="bg-cards">
+    <div class="bg-card c1"></div>
+    <div class="bg-card c2"></div>
+    <div class="bg-card c3"></div>
+    <div class="bg-card c4"></div>
+    <div class="bg-card c5"></div>
+    <div class="bg-card c6"></div>
+  </div>
+
+  <div class="auth-container">
+    <div class="logo">
+      <div class="logo-text">UNO</div>
+      <div class="logo-sub">Jeu de cartes en ligne</div>
+    </div>
+
+    <div class="auth-card">
+      <div class="tabs">
+        <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Connexion</button>
+        <button class="tab-btn"        id="tabRegister" onclick="switchTab('register')">Inscription</button>
+      </div>
+
+      <div class="alert" id="alertBox"></div>
+
+      <div class="form-section active" id="loginSection">
+        <div class="field">
+          <label for="loginUsername">Pseudo</label>
+          <input type="text" id="loginUsername" placeholder="Ton pseudo" autocomplete="username">
+          <div class="field-error" id="loginUsernameErr"></div>
+        </div>
+        <div class="field">
+          <label for="loginPassword">Mot de passe</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+          <div class="field-error" id="loginPasswordErr"></div>
+        </div>
+        <button class="submit-btn">Se connecter</button>
+        <div class="switch-link">
+          Pas encore de compte ?
+          <button>S'inscrire</button>
+        </div>
+      </div>
+
+      <div class="form-section" id="registerSection">
+        <div class="field">
+          <label for="regUsername">Pseudo</label>
+          <input type="text" id="regUsername" placeholder="Choisis un pseudo">
+        </div>
+        <div class="field">
+          <label for="regEmail">E-mail</label>
+          <input type="email" id="regEmail" placeholder="exemple@mail.com">
+        </div>
+        <div class="field">
+          <label for="regPassword">Mot de passe</label>
+          <input type="password" id="regPassword" placeholder="Min. 6 caractères">
+          <div class="strength-bar visible">
+            <div class="strength-fill" style="width:60%;background:#ffc83a;"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="regConfirm">Confirmer le mot de passe</label>
+          <input type="password" id="regConfirm" placeholder="Répète ton mot de passe">
+        </div>
+        <button class="submit-btn">Créer mon compte</button>
+        <div class="switch-link">
+          Déjà un compte ?
+          <button>Se connecter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
