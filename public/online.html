@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNO - En ligne</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="online-page">
+    <section class="hero-online">
+      <div>
+        <a class="back-link" href="./index.html">← Retour menu</a>
+        <div class="online-title">
+          <h1>En ligne</h1>
+          <p>Créer un lobby ou choisir une salle publique.</p>
+        </div>
+      </div>
+      <div class="profile">
+        <div class="profile-card">
+          <div class="name">ShortBoomer</div>
+          <div class="coins">700 🪙</div>
+          <div class="level"><span></span></div>
+        </div>
+        <div class="avatar">🧑</div>
+      </div>
+    </section>
+
+    <section class="lobby-layout">
+      <div class="panel">
+        <h2>Salons disponibles</h2>
+        <div class="room-list">
+          <div class="room-card">
+            <div class="room-meta">
+              <h3>Salon rapide #01</h3>
+              <p>3/4 joueurs • Classique • Public</p>
+              <span class="status-pill">En attente</span>
+            </div>
+            <button class="join-btn">Rejoindre</button>
+          </div>
+          <div class="room-card">
+            <div class="room-meta">
+              <h3>Salon fun +7</h3>
+              <p>2/4 joueurs • Variante • Public</p>
+              <span class="status-pill">Création</span>
+            </div>
+            <button class="join-btn">Rejoindre</button>
+          </div>
+          <div class="room-card">
+            <div class="room-meta">
+              <h3>Amis only</h3>
+              <p>1/4 joueurs • Code privé • Invite</p>
+              <span class="status-pill">Privé</span>
+            </div>
+            <button class="join-btn">Copier le code</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Créer un lobby</h2>
+        <form class="form-grid">
+          <div class="field">
+            <label>Nom du salon</label>
+            <input type="text" value="Salon ShortBoomer">
+          </div>
+          <div class="field">
+            <label>Mode</label>
+            <select>
+              <option>Classique</option>
+              <option>Fun</option>
+              <option>Rapide</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Nombre de joueurs</label>
+            <select>
+              <option>2 joueurs</option>
+              <option>3 joueurs</option>
+              <option selected>4 joueurs</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Visibilité</label>
+            <select>
+              <option>Public</option>
+              <option>Privé</option>
+            </select>
+          </div>
+          <button type="button" class="create-btn">Créer le lobby</button>
+          <button type="button" class="ghost-btn">Générer un code privé</button>
+        </form>
+
+        <div class="preview">
+          <h3>Aperçu</h3>
+          <div class="mini-room">
+            <div>
+              <strong>Salon ShortBoomer</strong>
+              <span>4 joueurs • Classique • Public</span>
+            </div>
+            <button class="join-btn">Prêt</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
