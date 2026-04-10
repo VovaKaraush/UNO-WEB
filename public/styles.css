@@ -788,6 +788,11 @@ body {
     margin-bottom: 28px;
   }
 
+  .tabs.single-tab {
+    grid-template-columns: minmax(180px, 1fr);
+    justify-content: center;
+  }
+
   .tab-btn {
     padding: 12px;
     border-radius: 16px;
