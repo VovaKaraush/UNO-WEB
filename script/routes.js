@@ -12,7 +12,7 @@ function setupRoutes(app) {
     });
 
     // Catch all other routes
-    app.all('*', (req, res) => {
+    app.all('/{*any}', (req, res) => {
         res.status(404).send('404 - Page not found');
     });
 }
