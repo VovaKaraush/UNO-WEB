@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNO WEB - Connexion</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="login-page">
+
+  <div class="bg-cards">
+    <div class="bg-card c1"></div>
+    <div class="bg-card c2"></div>
+    <div class="bg-card c3"></div>
+    <div class="bg-card c4"></div>
+    <div class="bg-card c5"></div>
+    <div class="bg-card c6"></div>
+  </div>
+
+  <div class="auth-container">
+    <div class="logo">
+      <div class="logo-text">UNO</div>
+      <div class="logo-sub">Jeu de cartes en ligne</div>
+    </div>
+
+    <div class="auth-card">
+      <div class="tabs"></div>
+
+      <div class="alert" id="alertBox"></div>
+
+      <!-- FORMULAIRE CONNEXION -->
+      <form class="form-section active" id="loginSection" action="/login" method="post">
+        <div class="field">
+          <label for="loginUsername">Pseudo</label>
+          <input type="text" id="loginUsername" name="username" placeholder="Ton pseudo" autocomplete="username" required>
+          <div class="field-error" id="loginUsernameErr"></div>
+        </div>
+
+        <div class="field">
+          <label for="loginPassword">Mot de passe</label>
+          <input type="password" id="loginPassword" name="password" placeholder="••••••••" autocomplete="current-password" required>
+          <div class="field-error" id="loginPasswordErr"></div>
+        </div>
+
+        <button class="submit-btn" type="submit">Se connecter</button>
+
+        <div class="switch-link">
+          Pas encore de compte ?
+          <button type="button" id="goRegister">S'inscrire</button>
+        </div>
+      </form>
+
+      <!-- FORMULAIRE INSCRIPTION -->
+      <form class="form-section" id="registerSection" action="/register" method="post">
+        <div class="field">
+          <label for="regUsername">Pseudo</label>
+          <input type="text" id="regUsername" name="username" placeholder="Choisis un pseudo" required>
+        </div>
+
+        <div class="field">
+          <label for="regEmail">E-mail</label>
+          <input type="email" id="regEmail" name="email" placeholder="exemple@mail.com" required>
+        </div>
+
+        <div class="field">
+          <label for="regPassword">Mot de passe</label>
+          <input type="password" id="regPassword" name="password" placeholder="Min. 6 caractères" required>
+          <div class="strength-bar visible">
+            <div class="strength-fill" style="width:60%;background:#ffc83a;"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="regConfirm">Confirmer le mot de passe</label>
+          <input type="password" id="regConfirm" name="confirmPassword" placeholder="Répète ton mot de passe" required>
+        </div>
+
+        <button class="submit-btn" type="submit">Créer mon compte</button>
+
+        <div class="switch-link">
+          Déjà un compte ?
+          <button type="button" id="goLogin">Se connecter</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const loginSection = document.getElementById("loginSection");
+    const registerSection = document.getElementById("registerSection");
+    const goRegisterBtn = document.getElementById("goRegister");
+    const goLoginBtn = document.getElementById("goLogin");
+
+    function showRegister() {
+      loginSection.classList.remove("active");
+      registerSection.classList.add("active");
+    }
+
+    function showLogin() {
+      registerSection.classList.remove("active");
+      loginSection.classList.add("active");
+    }
+
+    goRegisterBtn.addEventListener("click", showRegister);
+    goLoginBtn.addEventListener("click", showLogin);
+  </script>
+
+</body>
+</html>
