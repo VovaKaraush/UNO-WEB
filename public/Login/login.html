@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UNO WEB - Connexion</title>
-  <link rel="stylesheet" href="../common.css">
+  <title>UNO Web - Connexion</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
-<body class="login-page">
 
+<body class="login-page">
   <div class="bg-cards">
     <div class="bg-card c1"></div>
     <div class="bg-card c2"></div>
@@ -18,84 +17,106 @@
     <div class="bg-card c6"></div>
   </div>
 
-  <div class="auth-container">
-    <div class="logo">
-      <div class="logo-text">UNO</div>
-      <div class="logo-sub">Jeu de cartes en ligne</div>
-    </div>
+  <main class="auth-container">
+    <a class="back-link" href="../Acceuil/index.html">← Retour au menu</a>
 
-    <div class="auth-card">
+    <section class="logo">
+      <div class="uno-logo">UNO</div>
+      <p>Jeu de cartes en ligne</p>
+    </section>
+
+    <section class="auth-card">
       <div class="tabs">
+        <button class="tab-btn active" id="loginTab" type="button">Connexion</button>
+        <button class="tab-btn" id="registerTab" type="button">Inscription</button>
       </div>
 
       <div class="alert" id="alertBox"></div>
 
-      <div class="form-section active" id="loginSection">
+      <form class="form-section active" id="loginSection">
         <div class="field">
           <label for="loginUsername">Pseudo</label>
           <input type="text" id="loginUsername" placeholder="Ton pseudo" autocomplete="username">
           <div class="field-error" id="loginUsernameErr"></div>
         </div>
+
         <div class="field">
           <label for="loginPassword">Mot de passe</label>
           <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
           <div class="field-error" id="loginPasswordErr"></div>
         </div>
-        <button class="submit-btn">Se connecter</button>
+
+        <button class="submit-btn" type="submit">Se connecter</button>
+
         <div class="switch-link">
           Pas encore de compte ?
           <button type="button" id="goRegister">S'inscrire</button>
         </div>
-      </div>
+      </form>
 
-      <div class="form-section" id="registerSection">
+      <form class="form-section" id="registerSection">
         <div class="field">
           <label for="regUsername">Pseudo</label>
-          <input type="text" id="regUsername" placeholder="Choisis un pseudo">
+          <input type="text" id="regUsername" placeholder="Choisis un pseudo" autocomplete="username">
         </div>
+
         <div class="field">
           <label for="regEmail">E-mail</label>
-          <input type="email" id="regEmail" placeholder="exemple@mail.com">
+          <input type="email" id="regEmail" placeholder="exemple@mail.com" autocomplete="email">
         </div>
+
         <div class="field">
           <label for="regPassword">Mot de passe</label>
-          <input type="password" id="regPassword" placeholder="Min. 6 caractères">
+          <input type="password" id="regPassword" placeholder="Min. 6 caractères" autocomplete="new-password">
           <div class="strength-bar visible">
-            <div class="strength-fill" style="width:60%;background:#ffc83a;"></div>
+            <div class="strength-fill"></div>
           </div>
         </div>
+
         <div class="field">
           <label for="regConfirm">Confirmer le mot de passe</label>
-          <input type="password" id="regConfirm" placeholder="Répète ton mot de passe">
+          <input type="password" id="regConfirm" placeholder="Répète ton mot de passe" autocomplete="new-password">
         </div>
-        <button class="submit-btn">Créer mon compte</button>
+
+        <button class="submit-btn" type="submit">Créer mon compte</button>
+
         <div class="switch-link">
           Déjà un compte ?
           <button type="button" id="goLogin">Se connecter</button>
         </div>
-      </div>
-    </div>
-  </div>
+      </form>
+    </section>
+  </main>
 
   <script>
     const loginSection = document.getElementById("loginSection");
     const registerSection = document.getElementById("registerSection");
+
     const goRegisterBtn = document.getElementById("goRegister");
     const goLoginBtn = document.getElementById("goLogin");
+
+    const loginTab = document.getElementById("loginTab");
+    const registerTab = document.getElementById("registerTab");
 
     function showRegister() {
       loginSection.classList.remove("active");
       registerSection.classList.add("active");
+      loginTab.classList.remove("active");
+      registerTab.classList.add("active");
     }
 
     function showLogin() {
       registerSection.classList.remove("active");
       loginSection.classList.add("active");
+      registerTab.classList.remove("active");
+      loginTab.classList.add("active");
     }
 
     goRegisterBtn.addEventListener("click", showRegister);
-    goLoginBtn.addEventListener("click", showLogin);
-  </script>
+    registerTab.addEventListener("click", showRegister);
 
+    goLoginBtn.addEventListener("click", showLogin);
+    loginTab.addEventListener("click", showLogin);
+  </script>
 </body>
 </html>
