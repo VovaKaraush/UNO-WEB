@@ -147,7 +147,7 @@ io.on("connection", (socket) => {
 
   // Passer son tour après avoir pioché
   socket.on("passTurn", () => {
-    const pi = socket.data.playerIndex;
+    const pi = socket.data.playerIndex;                                                                                     //à changer
     if (!game || game.winner) return;
     if (pi !== game.current_player) return;
     nextTurn(game);
