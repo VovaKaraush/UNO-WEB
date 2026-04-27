@@ -3,69 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UNO - Menu</title>
-  <link rel="stylesheet" href="../common.css">
+  <title>UNO Web - Menu</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <div class="page">
     <header class="topbar">
+      <div class="brand">
+        <div class="logo">UNO</div>
+        <div>
+          <h1>UNO Web</h1>
+          <p>Choisis ton mode de jeu</p>
+        </div>
+      </div>
+
       <nav class="nav-icons">
-        <div class="nav-item"><span class="icon">🧩</span><div class="label">My Profile</div></div>
-        <div class="nav-item"><span class="icon">👥</span><div class="label">Amis</div></div>
-        <div class="nav-item"><span class="icon">📊</span><div class="label">Classements</div></div>
-        <div class="nav-item"><span class="icon">⚙️</span><div class="label">Options</div></div>
-        <a class="nav-item nav-link" href="../Login/login.html"><span class="icon">🔐</span><div class="label">Connect</div></a>
+        <div class="nav-item"><span>🧩</span><p>Profil</p></div>
+        <div class="nav-item"><span>👥</span><p>Amis</p></div>
+        <div class="nav-item"><span>📊</span><p>Classement</p></div>
+        <div class="nav-item"><span>⚙️</span><p>Options</p></div>
+        <a class="nav-item" href="../Login/login.html"><span>🔐</span><p>Connexion</p></a>
       </nav>
+
       <div class="profile">
-        <div class="profile-card">
-          <div class="name">Shori_Matt</div>
-          <div class="coins">700 $</div>
-          <div class="level"><span></span></div>
+        <div class="profile-info">
+          <strong>Shori_Matt</strong>
+          <span>700 $</span>
+          <div class="level"><div></div></div>
         </div>
         <div class="avatar">?</div>
       </div>
     </header>
 
-    <section class="grid">
-      <article class="card local span-2-row">
+    <main class="grid">
+      <article class="card local">
         <div class="players">👤 1-2 joueurs</div>
-        <div class="content">
-          <div class="visual">
-            <div class="uno-stack">
-              <div class="uno-real-card yellow"><span class="num top">4</span><span class="num">4</span></div>
-              <div class="uno-real-card blue"><span class="num top">4</span><span class="num">4</span></div>
-            </div>
+        <div class="visual">
+          <div class="uno-stack">
+            <div class="uno-card red">4</div>
+            <div class="uno-card yellow">4</div>
+            <div class="uno-card blue">4</div>
           </div>
-          <div class="title">Local</div>
         </div>
+        <h2>Local</h2>
+        <p>Joue sur le même écran avec tes amis.</p>
       </article>
 
-      <a class="card-link span-2-row" href="../Online/online.html">
-        <article class="card online">
-          <div class="players">👥 2-4 joueurs</div>
-          <div class="content">
-            <div class="visual"><div class="globe"></div></div>
-            <div class="title">En ligne</div>
-          </div>
-        </article>
+      <a class="card online" href="../Online/online.html">
+        <div class="players">👥 2-4 joueurs</div>
+        <div class="visual globe">🌍</div>
+        <h2>En ligne</h2>
+        <p>Affronte des joueurs à distance.</p>
       </a>
 
-      <article class="card dark span-2-row">
-        <div class="content">
-          <div class="visual"><div class="big-icon">🎮</div></div>
-          <div class="title" style="color:white;text-shadow:none">Mode</div>
-        </div>
+      <article class="card mode">
+        <div class="players">🎮 Modes spéciaux</div>
+        <div class="visual big">🎮</div>
+        <h2>Mode</h2>
+        <p>Règles classiques, rapides ou personnalisées.</p>
       </article>
 
-      <article class="card events span-2-row">
-        <div class="content">
-          <div class="visual"><div class="big-icon">🗓️</div></div>
-          <div class="title">Événements</div>
-        </div>
+      <article class="card events">
+        <div class="players">🗓️ À venir</div>
+        <div class="visual big">🏆</div>
+        <h2>Événements</h2>
+        <p>Tournois, défis et récompenses.</p>
       </article>
-
-    </section>
+    </main>
   </div>
 </body>
 </html>
