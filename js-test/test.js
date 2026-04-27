@@ -1,7 +1,8 @@
 // server.js - The Backend
 const express = require('express');
-const fs = require('fs')
+const fs = require('fs').promises
 const path = require('path');
+const { json } = require('stream/consumers');
 const app = express();
 
 // Middleware to parse JSON from requests
@@ -11,9 +12,9 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // Fake database (in reality, you'd use a real database)
-const users = [
+/*const users = [
   { username: 'alice', password: 'password123' }
-];
+];*/
 
 app.get('/', (req, res) => {
   console.log("Root requested");
@@ -53,6 +54,36 @@ app.post('/api/signup', (req, res) => {
     res.json({ success: true, message: 'User registered successfully!'});
   }
 });
+
+const JSON_FILE_PATH = path.join(__dirname, 'private', 'users.json');
+
+// Will return true if the json is present, false if it is not
+async function jsonCheck() {
+  try {
+    const data = await fs.readFile(JSON_FILE_PATH, 'utf8');
+    if (JSON.parse(data)){
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      // File doesn't exist, return empty array
+      return false
+    }
+    throw error;
+  };
+};
+
+async function createJson() {
+  if (jsonCheck()){
+    console.log('file was already created');
+  } else {
+    fs.writeFile("private/users.json", '{}', 'utf8');
+  };
+};
+
+createJson();
 
 app.listen(3000, () => {
   console.log('🚀 Server running on http://localhost:3000');
