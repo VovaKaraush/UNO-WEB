@@ -4,13 +4,19 @@ function setupRoutes(app) {
     // Get the Home Page
     app.get('/', (req, res) => {
         console.log("Root requested");
-        res.sendFile(path.join(__dirname, '..', 'html', 'login.html'));
+        res.sendFile(path.join(__dirname, '..', 'public', 'login', 'login.html'));
+    });
+
+    //sends homepage
+    app.get('/homepage', (req, res) => {
+        console.log("Lobby requested");
+        res.sendFile(path.join(__dirname, '..', 'public', 'acceuil', 'index.html'));
     });
 
     // Sends the lobby page
     app.get('/lobby', (req, res) => {
         console.log("Lobby requested");
-        res.sendFile(path.join(__dirname, '..', 'html', 'lobby.html'));
+        res.sendFile(path.join(__dirname, '..', 'public', 'online', 'online.html'));
     });
 
     // Post coming from the login page containing login data.

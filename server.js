@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken')
 const path = require('path');
 const json = require ('json')
-const setupRoutes = require('./routes/routes.js');
+const setupRoutes = require('./functions/routes.js');
 const app = express();
 const port = 3000;
 
