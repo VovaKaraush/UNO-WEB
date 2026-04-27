@@ -1,0 +1,128 @@
+<!-- public/index.html - The Frontend -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Login</title>
+</head>
+<body>
+  <h1>Login form</h1>
+  
+  <form id="loginForm">
+    <input type="text" id="loginUsername" placeholder="Username" required>
+    <input type="password" id="loginPassword" placeholder="Password" required>
+    <button type="submit">Login</button>
+  </form>
+
+  <div id="loginMessage"></div>
+
+  <h1>Sign-Up Form</h1>
+
+  <form id="signUpForm">
+    <input type="text" id="signUpUsername" placeholder="Username" required>
+    <input type="password" id="signUpPassword" placeholder="Password" required>
+    <button type="submit">Login</button>
+  </form>
+  
+  <div id="signUpMessage"></div>
+
+  <script>
+    //login form
+    // STEP 1: Listen for form submission
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); // Prevent page reload
+      
+      console.log('🌐 Browser: User clicked login button');
+      
+      // STEP 2: Get the values from the form
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+      
+      console.log('🌐 Browser: Preparing to send:', { username, password });
+      
+      // STEP 3: Send HTTP POST request to backend
+      try {
+        console.log('🌐 Browser: Sending request to /api/login...');
+        
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+        
+        console.log('🌐 Browser: Got response from server!');
+        
+        // STEP 4: Parse the JSON response
+        const data = await response.json();
+        
+        console.log('🌐 Browser: Response data:', data);
+        
+        // STEP 5: Show result to user
+        if (data.success) {
+          document.getElementById('loginMessage').textContent = '✅ ' + data.message;
+          document.getElementById('loginMessage').style.color = 'green';
+        } else {
+          document.getElementById('loginMessage').textContent = '❌ ' + data.message;
+          document.getElementById('loginMessage').style.color = 'red';
+        }
+        
+      } catch (error) {
+        console.error('🌐 Browser: Error!', error);
+        document.getElementById('loginMessage').textContent = '❌ Network error';
+      }
+    });
+
+
+    //----------------------------------------------------------------------------------------------//
+
+
+    //signUp Form
+    // STEP 1: Listen for form submission
+    document.getElementById('signUpForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); // Prevent page reload
+      
+      console.log('🌐 Browser: User clicked login button');
+      
+      // STEP 2: Get the values from the form
+      const username = document.getElementById('signUpUsername').value;
+      const password = document.getElementById('signUpPassword').value;
+      
+      console.log('🌐 Browser: Preparing to send:', { username, password });
+      
+      // STEP 3: Send HTTP POST request to backend
+      try {
+        console.log('🌐 Browser: Sending request to /api/signup...');
+        
+        const response = await fetch('/api/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+        
+        console.log('🌐 Browser: Got response from server!');
+        
+        // STEP 4: Parse the JSON response
+        const data = await response.json();
+        
+        console.log('🌐 Browser: Response data:', data);
+        
+        // STEP 5: Show result to user
+        if (data.success) {
+          document.getElementById('signUpMessage').textContent = '✅ ' + data.message;
+          document.getElementById('signUpMessage').style.color = 'green';
+        } else {
+          document.getElementById('signUpMessage').textContent = '❌ ' + data.message;
+          document.getElementById('signUpMessage').style.color = 'red';
+        }
+        
+      } catch (error) {
+        console.error('🌐 Browser: Error!', error);
+        document.getElementById('signUpMessage').textContent = '❌ Network error';
+      }
+    });
+  </script>
+</body>
+</html>
