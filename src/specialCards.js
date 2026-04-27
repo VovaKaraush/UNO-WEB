@@ -1,38 +1,45 @@
-import * as actions from "./actions.js";
-import { prompt } from "prompt-sync";
+// Aucun import ici — les fonctions utilitaires sont injectées via init()
+// pour éviter la dépendance circulaire avec actions.js
 
-//#####################################################################################
-//#                                                                                   #
-//# For all functions below : "game" param is the whole game stats contained in a tab #
-//#                                                                                   #
-//#####################################################################################
+let _drawCard, _nextTurn, _getNextPlayer;
+
+export function init({ drawCard, nextTurn, getNextPlayer }) {
+  _drawCard = drawCard;
+  _nextTurn = nextTurn;
+  _getNextPlayer = getNextPlayer;
+}
 
 export function skip(game) {
-  //skip a turn by calling nextTurn function from "./actions.js"
-  actions.nextTurn(game);
+  _nextTurn(game); // saute le joueur suivant
+  _nextTurn(game);
 }
 
 export function reverse(game) {
-  //reverse the order by changing the sign of game.order (+1 = right; -1 = left)
   game.order = -game.order;
+  if (game.players.length === 2) {
+    // À 2 joueurs, reverse agit comme un skip
+    _nextTurn(game);
+    _nextTurn(game);
+  } else {
+    _nextTurn(game);
+  }
 }
 
 export function draw2(game) {
-  //call the function drawCard(<card amount>, <next player based on current+1>, <game stats>)
-  actions.drawCard(2, game.players[game.current_player++], game);
+  _drawCard(2, _getNextPlayer(game), game);
+  _nextTurn(game); // saute le joueur suivant
+  _nextTurn(game);
 }
 
 export function wild(game) {
-  //declares a temporary input which will contain one of the 4 strings between ["red", "gree", "blue", "yellow"]
-  let input = "";
-  while (!["red", "gree", "blue", "yellow"].includes(input)) {
-    input = prompt("Chose a color : ").toLowerCase();
-  }
-  game.wild_color = input;
+  // La couleur est choisie côté client, on met le jeu en attente
+  game.pending = "wild";
+  _nextTurn(game);
 }
 
 export function draw4(game) {
-  //call the function drawCard(<card amount>, <next player based on current+1>, <game stats>)
-  actions.drawCard(4, game.players[game.current_player++], game);
-  wild(game);
+  _drawCard(4, _getNextPlayer(game), game);
+  game.pending = "wild";
+  _nextTurn(game); // saute le joueur suivant
+  _nextTurn(game);
 }

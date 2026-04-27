@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>UNO</title>
+  <style>
+    /* Reset minimal */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: monospace; padding: 16px; background: #f4f4f4; }
+    h1 { margin-bottom: 12px; }
+    h2 { margin: 10px 0 6px; }
+    hr { margin: 12px 0; }
+    button { cursor: pointer; padding: 4px 10px; margin: 2px; }
+    input { padding: 4px; margin: 2px; }
+    #error-msg { color: red; margin: 6px 0; min-height: 1.2em; }
+    #status-msg { color: green; margin: 6px 0; min-height: 1.2em; }
+
+    /* Cartes */
+    .card {
+      display: inline-block;
+      border: 2px solid #333;
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin: 3px;
+      font-size: 0.85em;
+      vertical-align: middle;
+      background: white;
+      min-width: 50px;
+      text-align: center;
+      position: relative;
+    }
+    .card.red    { background: #ffcccc; border-color: red; }
+    .card.green  { background: #ccffcc; border-color: green; }
+    .card.blue   { background: #cce0ff; border-color: blue; }
+    .card.yellow { background: #fffacc; border-color: goldenrod; }
+    .card.wild   { background: linear-gradient(135deg, red 25%, green 25%, green 50%, blue 50%, blue 75%, yellow 75%); border-color: #333; color: white; text-shadow: 0 0 3px black; }
+
+    .card.playable { outline: 3px solid black; cursor: pointer; }
+    .card.playable:hover { transform: translateY(-4px); }
+
+    /* Joueurs adversaires */
+    .opponent { margin: 4px 0; padding: 4px 8px; background: #eee; border-radius: 4px; }
+    .opponent.active { background: #ffe5a0; font-weight: bold; }
+
+    /* Sections */
+    #setup-section, #game-section { display: none; }
+    #game-section.visible, #setup-section.visible { display: block; }
+
+    /* Couleur sauvage */
+    .color-btn { padding: 6px 16px; margin: 4px; border: 2px solid #333; border-radius: 4px; cursor: pointer; }
+    .color-btn.red    { background: #ffaaaa; }
+    .color-btn.green  { background: #aaffaa; }
+    .color-btn.blue   { background: #aaccff; }
+    .color-btn.yellow { background: #ffee88; }
+  </style>
+</head>
+<body>
+
+<h1>🃏 UNO</h1>
+<div id="error-msg"></div>
+<div id="status-msg"></div>
+
+<!-- ===== SETUP ===== -->
+<div id="setup-section" class="visible">
+  <h2>Nouvelle partie</h2>
+  <label>Nombre de joueurs (2–8) :
+    <input type="number" id="player-count" min="2" max="8" value="2" />
+  </label>
+  <button onclick="setupPlayerNames()">Suivant →</button>
+
+  <div id="name-inputs"></div>
+  <div id="start-btn-div" style="display:none">
+    <button onclick="startGame()">Lancer la partie</button>
+  </div>
+</div>
+
+<!-- ===== JEU ===== -->
+<div id="game-section">
+
+  <div id="winner-banner" style="display:none; font-size:1.4em; font-weight:bold; color: darkgreen; margin-bottom:10px;"></div>
+
+  <h2>Tour de : <span id="current-player-name">—</span></h2>
+  <p>Ordre : <span id="order-display">→</span> | Pioche : <span id="deck-count">—</span> cartes</p>
+
+  <hr>
+
+  <h2>Carte du dessus</h2>
+  <div id="top-card"></div>
+  <div id="wild-color-display" style="margin-top:4px;"></div>
+
+  <hr>
+
+  <h2>Adversaires</h2>
+  <div id="opponents-list"></div>
+
+  <hr>
+
+  <!-- Choix de couleur (wild) -->
+  <div id="color-picker" style="display:none;">
+    <strong>Choisissez une couleur :</strong><br>
+    <button class="color-btn red"    onclick="chooseColor('red')">Rouge</button>
+    <button class="color-btn green"  onclick="chooseColor('green')">Vert</button>
+    <button class="color-btn blue"   onclick="chooseColor('blue')">Bleu</button>
+    <button class="color-btn yellow" onclick="chooseColor('yellow')">Jaune</button>
+  </div>
+
+  <h2>Votre main — <span id="your-name">—</span></h2>
+  <p id="your-turn-msg"></p>
+  <div id="hand"></div>
+
+  <div style="margin-top:10px;">
+    <button onclick="doDraw()" id="draw-btn">Piocher une carte</button>
+    <button onclick="doPass()" id="pass-btn" style="display:none;">Passer le tour</button>
+  </div>
+
+  <hr>
+  <button onclick="resetGame()">Recommencer</button>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+
+// ─── État local ─────────────────────────────────────
+let myPlayerIndex = -1;  // -1 = spectateur
+let playerNames = [];
+let lastState = null;
+let drawnThisTurn = false; // a-t-on pioché ce tour ?
+
+// ─── UI helpers ─────────────────────────────────────
+function showError(msg) {
+  document.getElementById("error-msg").textContent = msg;
+  setTimeout(() => document.getElementById("error-msg").textContent = "", 3000);
+}
+function showStatus(msg) {
+  document.getElementById("status-msg").textContent = msg;
+}
+
+function cardHTML(card, index, playable) {
+  const colorMap = {
+    red:    "UNO_rouges",
+    green:  "UNO_verts",
+    blue:   "UNO_bleus",
+    yellow: "UNO_jaunes",
+  };
+  const valueMap = {
+    "0": "0", "1": "1", "2": "2", "3": "3", "4": "4",
+    "5": "5", "6": "6", "7": "7", "8": "8", "9": "9",
+    "skip":    "Skip",
+    "reverse": "Change Tour",
+    "draw2":   "+2",
+    "wild":    "Change couleur",
+    "draw4":   "+4",
+  };
+
+  let src;
+  if (card.color === "wild") {
+    const file = valueMap[card.value]; // "+4" ou "Change couleur"
+    src = `cards/UNO_others/${file}.png`;
+  } else {
+    const folder = colorMap[card.color];
+    const file = `${valueMap[card.value]} ${card.color === "red" ? "Rouge" : card.color === "green" ? "Vert" : card.color === "blue" ? "Bleu" : "Jaune"}`;
+    src = `cards/${folder}/${file}.png`;
+  }
+
+  let cls = `card ${card.color}`;
+  let onclick = "";
+  if (playable) {
+    cls += " playable";
+    onclick = `onclick="playCard(${index})"`;
+  }
+
+  return `<span class="${cls}" ${onclick}>
+    <img src="${src}" style="width:50px;height:75px;display:block;" 
+         onerror="this.style.display='none';this.parentElement.textContent='${card.color} ${card.value}'" />
+  </span>`;
+}
+
+// ─── SETUP ──────────────────────────────────────────
+function setupPlayerNames() {
+  const count = parseInt(document.getElementById("player-count").value);
+  if (count < 2 || count > 8) { showError("Entre 2 et 8 joueurs."); return; }
+
+  let html = "<br><h2>Noms des joueurs</h2>";
+  for (let i = 0; i < count; i++) {
+    html += `<div><label>Joueur ${i+1} : <input type="text" id="pname_${i}" value="Joueur ${i+1}" /></label></div>`;
+  }
+  document.getElementById("name-inputs").innerHTML = html;
+  document.getElementById("start-btn-div").style.display = "block";
+}
+
+function startGame() {
+  const count = parseInt(document.getElementById("player-count").value);
+  playerNames = [];
+  for (let i = 0; i < count; i++) {
+    const v = document.getElementById(`pname_${i}`).value.trim();
+    playerNames.push(v || `Joueur ${i+1}`);
+  }
+
+  // Le premier joueur = vous (index 0). On peut faire jouer tout le monde sur le même écran.
+  // Pour un vrai multi-joueur réseau il faudrait que chaque onglet choisisse son index.
+  // Ici : écran partagé, on voit toujours le joueur courant.
+  myPlayerIndex = 0; // sera mis à jour à chaque tour pour l'affichage
+
+  socket.emit("startGame", { playerNames });
+}
+
+// ─── Actions jeu ────────────────────────────────────
+function playCard(index) {
+  socket.emit("playCard", { cardIndex: index });
+  drawnThisTurn = false;
+}
+
+function doDraw() {
+  if (drawnThisTurn) { showError("Vous avez déjà pioché, passez ou jouez la carte."); return; }
+  socket.emit("drawCard");
+  drawnThisTurn = true;
+}
+
+function doPass() {
+  socket.emit("passTurn");
+  drawnThisTurn = false;
+}
+
+function chooseColor(color) {
+  socket.emit("chooseColor", { color });
+}
+
+function resetGame() {
+  socket.emit("resetGame");
+}
+
+// ─── Socket events ───────────────────────────────────
+socket.on("gameStarted", ({ playerNames: names }) => {
+  document.getElementById("setup-section").classList.remove("visible");
+  document.getElementById("game-section").classList.add("visible");
+  playerNames = names;
+  drawnThisTurn = false;
+  // Rejoindre en tant que spectateur (écran partagé)
+  socket.emit("join", { playerIndex: 0 });
+  showStatus("Partie lancée !");
+});
+
+socket.on("state", (state) => {
+  if (!state) return;
+  lastState = state;
+  renderState(state);
+});
+
+socket.on("reset", () => {
+  document.getElementById("game-section").classList.remove("visible");
+  document.getElementById("setup-section").classList.add("visible");
+  document.getElementById("winner-banner").style.display = "none";
+  document.getElementById("name-inputs").innerHTML = "";
+  document.getElementById("start-btn-div").style.display = "none";
+  lastState = null;
+  drawnThisTurn = false;
+});
+
+socket.on("error", (msg) => showError(msg));
+
+// ─── Rendu ───────────────────────────────────────────
+function renderState(state) {
+  const cp = state.current_player;
+  const currentName = state.players[cp]?.name || "—";
+  document.getElementById("current-player-name").textContent = currentName;
+  document.getElementById("order-display").textContent = state.order === 1 ? "→" : "←";
+  document.getElementById("deck-count").textContent = state.deckCount;
+
+  // Carte du dessus
+  const topCard = state.topCard;
+  document.getElementById("top-card").innerHTML = topCard ? cardHTML(topCard, -1, false) : "—";
+
+  // Couleur du wild active
+  const wcd = document.getElementById("wild-color-display");
+  if (state.wild_color) {
+    wcd.innerHTML = `Couleur active : <span class="card ${state.wild_color}" style="display:inline-block">${state.wild_color.toUpperCase()}</span>`;
+  } else {
+    wcd.textContent = "";
+  }
+
+  // Victoire
+  const banner = document.getElementById("winner-banner");
+  if (state.winner) {
+    banner.style.display = "block";
+    banner.textContent = `🏆 ${state.winner} a gagné la partie !`;
+  } else {
+    banner.style.display = "none";
+  }
+
+  // Adversaires (tous sauf le joueur courant — ici on les affiche tous)
+  // En mode "écran partagé" on affiche tout le monde dans la liste
+  let oppHTML = "";
+  state.players.forEach((p, i) => {
+    const activeCls = i === cp ? "active" : "";
+    const unoTag = p.uno ? " 🔴 UNO!" : "";
+    oppHTML += `<div class="opponent ${activeCls}">${p.name} — ${p.cardCount} carte(s)${unoTag}</div>`;
+  });
+  document.getElementById("opponents-list").innerHTML = oppHTML;
+
+  // Main du joueur actif (écran partagé = on montre toujours le joueur courant)
+  // myPlayerIndex représente le joueur dont on voit la main
+  myPlayerIndex = cp; // mode écran partagé
+  document.getElementById("your-name").textContent = state.players[cp]?.name || "—";
+
+  const hand = state.players[cp]?.hand;
+  let handHTML = "";
+  if (hand) {
+    const playable = state.playable || [];
+    hand.forEach((card, i) => {
+      handHTML += cardHTML(card, i, playable[i]);
+    });
+  }
+  document.getElementById("hand").innerHTML = handHTML || "(aucune carte)";
+
+  // Message tour
+  const isMyTurn = true; // toujours actif en mode partagé
+  const turnMsg = document.getElementById("your-turn-msg");
+  const drawBtn = document.getElementById("draw-btn");
+  const passBtn = document.getElementById("pass-btn");
+
+  if (state.winner) {
+    turnMsg.textContent = "";
+    drawBtn.style.display = "none";
+    passBtn.style.display = "none";
+  } else if (state.pending === "wild") {
+    turnMsg.textContent = "Choisissez une couleur ci-dessous.";
+    drawBtn.style.display = "none";
+    passBtn.style.display = "none";
+  } else {
+    turnMsg.textContent = `C'est le tour de ${currentName}. Cliquez sur une carte soulignée pour la jouer.`;
+    drawBtn.style.display = "inline";
+    passBtn.style.display = drawnThisTurn ? "inline" : "none";
+  }
+
+  // Choix de couleur
+  document.getElementById("color-picker").style.display =
+    state.pending === "wild" ? "block" : "none";
+}
+</script>
+</body>
+</html>
