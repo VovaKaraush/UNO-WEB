@@ -6,7 +6,6 @@ Une implémentation web du jeu classique UNO avec support multijoueur en réseau
 
 - [Description](#description)
 - [Fonctionnalités](#fonctionnalités)
-- [Structure du projet](#structure-du-projet)
 - [Installation](#installation)
 - [Utilisation](#utilisation)
 - [Architecture](#architecture)
@@ -30,34 +29,6 @@ Une implémentation web du jeu classique UNO avec support multijoueur en réseau
 - 👥 **Multijoueur LAN** : Jeu en réseau local avec plusieurs joueurs
 - 🎯 **Interface interactive** : Interface utilisateur intuitive et responsive
 - 💾 **Gestion d'état** : Système de sauvegarde et synchronisation du jeu
-
-## Structure du projet
-
-```
-UNO-WEB/
-├── server.js                 # Serveur principal
-├── package.json              # Dépendances du projet
-├── db/
-│   ├── database.js          # Configuration de la base de données
-│   ├── post.js              # Opérations POST
-│   └── routes.js            # Définition des routes
-├── functions/
-│   └── [Fonctions utilitaires]
-├── public/                   # Ressources statiques
-│   ├── client.js            # Code client JavaScript
-│   ├── Acceuil/             # Page d'accueil
-│   ├── Game/                # Interface du jeu
-│   ├── Login/               # Page de connexion
-│   └── Online/              # Mode online
-└── src/                      # Logique métier
-    ├── actions.js           # Actions du jeu
-    ├── deck.js              # Gestion du paquet de cartes
-    ├── game.js              # Moteur du jeu
-    ├── player.js            # Gestion des joueurs
-    ├── rule.js              # Règles du jeu
-    ├── shuffle.js           # Mélange des cartes
-    └── specialCards.js      # Cartes spéciales
-```
 
 ## Installation
 
