@@ -22,7 +22,7 @@
 
       <div class="profile">
         <div class="profile-card">
-          <div class="name">Shori_Matt</div>
+          <div class="name" id="username-online">Shori_Matt</div>
           <div class="coins">700 🪙</div>
           <div class="level"><span></span></div>
         </div>
@@ -76,7 +76,7 @@
 
           <div class="field">
             <label>Nom</label>
-            <input type="text" value="Salon de Shori_Matt">
+            <input type="text" id="room-name" value="Salon de Shori_Matt">
           </div>
 
           <div class="field">
@@ -115,7 +115,7 @@
 
           <div class="mini-room">
             <div>
-              <strong>Salon de Shori_Matt</strong>
+              <strong id="room-preview">Salon de Shori_Matt</strong>
               <span>4 joueurs • Classique</span>
             </div>
             <button class="join-btn">Prêt</button>
@@ -126,5 +126,29 @@
 
     </section>
   </div>
+
+  <script>
+    // Récupérer le username depuis localStorage
+    const userJson = localStorage.getItem('user');
+    
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson);
+        if (user.username) {
+          // Mettre à jour le profil en haut
+          document.getElementById('username-online').textContent = user.username;
+          
+          // Mettre à jour le champ de création de salon
+          const roomNameInput = document.getElementById('room-name');
+          roomNameInput.value = `Salon de ${user.username}`;
+          
+          // Mettre à jour l'aperçu du salon
+          document.getElementById('room-preview').textContent = `Salon de ${user.username}`;
+        }
+      } catch (error) {
+        console.error('Erreur de parsing user:', error);
+      }
+    }
+  </script>
 </body>
 </html>

@@ -88,6 +88,17 @@ a {
   background: rgba(255, 255, 255, 0.22);
 }
 
+.nav-item:not(a) {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.nav-item:not(a):hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .nav-item span {
   font-size: 28px;
 }
@@ -166,6 +177,17 @@ a {
 .card:hover {
   transform: translateY(-8px) scale(1.02);
   box-shadow: 0 26px 45px rgba(0, 0, 0, 0.45);
+}
+
+.card:not(.online) {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.card:not(.online):hover {
+  transform: none;
+  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.35);
 }
 
 .card::before {

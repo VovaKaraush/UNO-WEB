@@ -27,7 +27,7 @@
 
       <div class="profile">
         <div class="profile-info">
-          <strong>Shori_Matt</strong>
+          <strong id="username">Shori_Matt</strong>
           <span>700 $</span>
           <div class="level"><div></div></div>
         </div>
@@ -71,5 +71,21 @@
       </article>
     </main>
   </div>
+
+  <script>
+    // Récupérer le username depuis localStorage
+    const userJson = localStorage.getItem('user');
+    
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson);
+        if (user.username) {
+          document.getElementById('username').textContent = user.username;
+        }
+      } catch (error) {
+        console.error('Erreur de parsing user:', error);
+      }
+    }
+  </script>
 </body>
 </html>
