@@ -1,6 +1,14 @@
 const path = require('path');
+const express = require('express');
+const setupPostRoutes = require('./post.js');
+const app = express();
+
+app.use(express.static(path.join(__dirname, 'public)')));
 
 function setupRoutes(app) {
+    // Initialize POST routes
+    setupPostRoutes(app);
+
     // Get the Home Page
     app.get('/', (req, res) => {
         console.log("Root requested");
@@ -18,14 +26,7 @@ function setupRoutes(app) {
         console.log("Lobby requested");
         res.sendFile(path.join(__dirname, '..', 'public', 'online', 'online.html'));
     });
-
-    // Post coming from the login page containing login data.
-    app.post('/', (req, res) => {
-        const { userId, email } = req.body;
-        // Process the data
-        res.json({ success: true });
-    });
-
+    
     // Catch all other routes
     app.all('/{*any}', (req, res) => {
         console.log("unknown requested");
