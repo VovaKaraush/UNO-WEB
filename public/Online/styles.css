@@ -199,6 +199,22 @@ a {
   cursor: pointer;
 }
 
+.join-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.room-card.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+select:disabled,
+select option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .create-btn {
   width: 100%;
   padding: 14px;
