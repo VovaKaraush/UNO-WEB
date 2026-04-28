@@ -1,0 +1,1 @@
+## il manque à faire le hanlder pour Socket.io du Game.html
