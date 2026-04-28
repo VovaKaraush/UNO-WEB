@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UNO Web - Connexion</title>
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/Login/styles.css">
 </head>
 
 <body class="login-page">
@@ -98,6 +98,8 @@
     const loginTab = document.getElementById("loginTab");
     const registerTab = document.getElementById("registerTab");
 
+    const alertBox = document.getElementById("alertBox");
+
     function showRegister() {
       loginSection.classList.remove("active");
       registerSection.classList.add("active");
@@ -111,6 +113,95 @@
       registerTab.classList.remove("active");
       loginTab.classList.add("active");
     }
+
+    function showAlert(message, type) {
+      alertBox.textContent = message;
+      alertBox.className = `alert ${type}`;
+      alertBox.style.display = "block";
+      setTimeout(() => {
+        alertBox.style.display = "none";
+      }, 5000);
+    }
+
+    // Handle Login Form Submission
+    loginSection.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const username = document.getElementById("loginUsername").value;
+      const password = document.getElementById("loginPassword").value;
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showAlert('Connexion réussie! Redirection en cours...', 'success');
+          // Store token in localStorage
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          // Redirect to lobby after 1.5s
+          setTimeout(() => {
+            window.location.href = '/lobby';
+          }, 1500);
+        } else {
+          showAlert(data.message, 'error');
+          // Clear error fields
+          if (data.message.includes('pseudo')) {
+            document.getElementById("loginUsernameErr").textContent = data.message;
+          } else {
+            document.getElementById("loginPasswordErr").textContent = data.message;
+          }
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+        showAlert('Erreur de connexion au serveur', 'error');
+      }
+    });
+
+    // Handle Register Form Submission
+    registerSection.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const username = document.getElementById("regUsername").value;
+      const email = document.getElementById("regEmail").value;
+      const password = document.getElementById("regPassword").value;
+      const confirmPassword = document.getElementById("regConfirm").value;
+
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, email, password, confirmPassword })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showAlert('Inscription réussie! Redirection en cours...', 'success');
+          // Store token in localStorage
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          // Redirect to lobby after 1.5s
+          setTimeout(() => {
+            window.location.href = '/lobby';
+          }, 1500);
+        } else {
+          showAlert(data.message, 'error');
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+        showAlert('Erreur de connexion au serveur', 'error');
+      }
+    });
 
     goRegisterBtn.addEventListener("click", showRegister);
     registerTab.addEventListener("click", showRegister);
