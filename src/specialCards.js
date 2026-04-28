@@ -23,7 +23,13 @@ export function reverse(game) {
 
 export function draw2(game) {
   //call the function drawCard(<card amount>, <next player based on current+1>, <game stats>)
-  const nextPlayerIndex = (game.current_player + game.order) % game.players.length;
+  let nextPlayerIndex = game.current_player + game.order;
+  // Handle negative index for reverse direction
+  if (nextPlayerIndex < 0) {
+    nextPlayerIndex = game.players.length + nextPlayerIndex;
+  } else if (nextPlayerIndex >= game.players.length) {
+    nextPlayerIndex = nextPlayerIndex % game.players.length;
+  }
   _drawCard(2, game.players[nextPlayerIndex], game);
 }
 
