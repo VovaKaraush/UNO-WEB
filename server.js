@@ -1,5 +1,4 @@
 require('dotenv').config(); // Charge les variables d'environnement en premier
-
 const express = require('express');
 const jwt = require('jsonwebtoken')
 const path = require('path');
