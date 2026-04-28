@@ -1,9 +1,6 @@
-const path = require('path');
-const express = require('express');
-const setupPostRoutes = require('./post.js');
-const app = express();
-
-app.use(express.static(path.join(__dirname, 'public)')));
+import path from 'path';
+import express from 'express';
+import setupPostRoutes from './post.js';
 
 function setupRoutes(app) {
     // Initialize POST routes
@@ -12,26 +9,26 @@ function setupRoutes(app) {
     // Get the Home Page
     app.get('/', (req, res) => {
         console.log("Root requested");
-        res.sendFile(path.join(__dirname, '..', 'public', 'login', 'login.html'));
+        res.sendFile(path.join(process.cwd(), 'public', 'login', 'login.html'));
     });
 
-    //sends homepage
+    // Homepage
     app.get('/homepage', (req, res) => {
-        console.log("Lobby requested");
-        res.sendFile(path.join(__dirname, '..', 'public', 'acceuil', 'index.html'));
+        console.log("Homepage requested");
+        res.sendFile(path.join(process.cwd(), 'public', 'acceuil', 'index.html'));
     });
 
-    // Sends the lobby page
+    // Lobby
     app.get('/lobby', (req, res) => {
         console.log("Lobby requested");
-        res.sendFile(path.join(__dirname, '..', 'public', 'online', 'online.html'));
+        res.sendFile(path.join(process.cwd(), 'public', 'online', 'online.html'));
     });
-    
-    // Catch all other routes
-    app.all('/{*any}', (req, res) => {
-        console.log("unknown requested");
+
+    // Catch all
+    app.use((req, res) => {
+        console.log("Unknown route requested");
         res.status(404).send('404 - Page not found');
     });
 }
 
-module.exports = setupRoutes;
+export default setupRoutes;

@@ -1,4 +1,4 @@
-import * as specialCards from "./special_cards.js";
+import * as specialCards from "./specialCards.js";
 
 export function playCard(card_index, player, game) {
   const special_cards = {

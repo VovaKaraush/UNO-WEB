@@ -90,18 +90,22 @@
 
           <div class="field">
             <label>Joueurs</label>
-            <select>
+            <select id="player-number">
               <option>2</option>
               <option>3</option>
               <option selected>4</option>
+              <option>5</option>
+              <option>6</option>
+              <option>7</option>
+              <option>8</option>
             </select>
           </div>
 
           <div class="field">
             <label>Visibilité</label>
             <select>
-              <option>Public</option>
-              <option disabled>Privé</option>
+              <option disabled>Public</option>
+              <option>Privé</option>
             </select>
           </div>
 
@@ -150,5 +154,8 @@
       }
     }
   </script>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/client.js"></script>
 </body>
 </html>
