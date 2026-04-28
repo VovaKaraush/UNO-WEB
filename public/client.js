@@ -2,7 +2,6 @@ const socket = io();
 
 let currentPlayer = null;
 let currentLobby = null;
-let playerCount = 0;
 
 // ─── Elements du DOM ─────────────────────────────────
 const createBtn = document.querySelector('.create-btn');
@@ -15,9 +14,7 @@ const roomPreview = document.getElementById('room-preview');
 // ─── Récupérer l'utilisateur depuis localStorage ─────
 try {
   const userJson = localStorage.getItem('user');
-  if (userJson) {
-    currentPlayer = JSON.parse(userJson);
-  }
+  if (userJson) currentPlayer = JSON.parse(userJson);
 } catch (error) {
   console.error('Erreur de parsing user:', error);
 }
@@ -38,19 +35,13 @@ if (createBtn) {
     const lobbyName = nameInput?.value?.trim();
     const playerNum = parseInt(playerNumberSelect?.value) || 2;
 
-    if (!lobbyName) {
-      alert('Entrez un nom de lobby');
-      return;
-    }
+    if (!lobbyName) { alert('Entrez un nom de lobby'); return; }
 
     const lobbyCode = generateLobbyCode();
-
-    // Émettre l'événement de création vers le serveur
     socket.emit('createLobby', {
       name: lobbyName,
       code: lobbyCode,
       maxPlayers: playerNum,
-      hostId: socket.id,
       hostName: currentPlayer?.username || 'Joueur'
     });
   });
@@ -63,7 +54,6 @@ if (codeBtn) {
     if (code && code.trim()) {
       socket.emit('joinLobbyByCode', {
         code: code.trim().toUpperCase(),
-        playerId: socket.id,
         playerName: currentPlayer?.username || 'Joueur'
       });
     }
@@ -74,81 +64,60 @@ if (codeBtn) {
 if (readyBtn) {
   readyBtn.addEventListener('click', () => {
     if (currentLobby?.code) {
-      socket.emit('playerReady', {
-        lobbyCode: currentLobby.code
-      });
+      socket.emit('playerReady', { lobbyCode: currentLobby.code });
     }
   });
 }
 
 // ─── Événements Socket.io ──────────────────────────
 
-// Confirmation de création de lobby
 socket.on('lobbyCreated', (lobby) => {
   currentLobby = lobby;
   updateLobbyUI(lobby);
-  alert(`Lobby créé ! Code: ${lobby.code}`);
+  alert(`Lobby créé ! Code : ${lobby.code}`);
 });
 
-// Confirmation de participation
 socket.on('joinedLobby', (lobby) => {
   currentLobby = lobby;
   updateLobbyUI(lobby);
   alert(`Vous avez rejoint le lobby !`);
 });
 
-// Mise à jour en temps réel du lobby
 socket.on('lobbyUpdated', (lobby) => {
   currentLobby = lobby;
   updateLobbyUI(lobby);
-  
-  // Si le lobby est plein, rediriger vers Game.html
-  if (lobby.players.length >= lobby.maxPlayers) {
-    console.log('Lobby plein, redirection vers le jeu dans 2 secondes...');
-    readyBtn.disabled = true;
-    readyBtn.textContent = 'Démarrage...';
-    setTimeout(() => {
-      window.location.href = '/Game/Game.html';
-    }, 2000);
-  }
 });
 
-// Erreur lors de la tentative de rejoindre
+// ← Clé du fix : c'est le serveur qui dit quand rediriger,
+//   et on sauvegarde le gameRoomId pour que Game.html puisse rejoindre la room.
+socket.on('gameStarted', ({ gameRoomId, playerNames }) => {
+  localStorage.setItem('gameRoomId', gameRoomId);
+  localStorage.setItem('playerNames', JSON.stringify(playerNames));
+  window.location.href = '/Game/Game.html';
+});
+
 socket.on('lobbyError', (message) => {
   alert(`Erreur: ${message}`);
 });
 
-// ─── Fonction de mise à jour de l'UI ───────────────
+// ─── Mise à jour de l'UI ───────────────────────────
 function updateLobbyUI(lobby) {
   if (!lobby) return;
 
-  // Mettre à jour l'aperçu du salon
-  if (roomPreview) {
-    roomPreview.textContent = lobby.name;
-  }
+  if (roomPreview) roomPreview.textContent = lobby.name;
 
-  // Afficher les joueurs
-  const playerCount = lobby.players?.length || 0;
-  const maxPlayers = lobby.maxPlayers || 2;
-  
-  console.log(`Joueurs: ${playerCount}/${maxPlayers}`);
-  console.log(`Joueurs actuels:`, lobby.players.map(p => p.name).join(', '));
-  
-  // Mettre à jour le texte du mini-room
+  const count = lobby.players?.length || 0;
+  const max   = lobby.maxPlayers || 2;
+
   const miniRoomSpan = document.querySelector('.mini-room span');
-  if (miniRoomSpan) {
-    miniRoomSpan.textContent = `${playerCount}/${maxPlayers} joueurs • Classique`;
-  }
+  if (miniRoomSpan) miniRoomSpan.textContent = `${count}/${max} joueurs • Classique`;
 }
 
-// ─── Affichage du code privé ─────────────────────
+// ─── Code privé ──────────────────────────────────
 const ghostBtn = document.querySelector('.ghost-btn');
 if (ghostBtn) {
   ghostBtn.addEventListener('click', () => {
-    if (currentLobby?.code) {
-      prompt(`Code du lobby privé (à partager):`, currentLobby.code);
-    } else {
-      alert('Créez d\'abord un lobby');
-    }
+    if (currentLobby?.code) prompt('Code du lobby privé (à partager) :', currentLobby.code);
+    else alert('Créez d\'abord un lobby');
   });
 }

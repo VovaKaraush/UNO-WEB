@@ -7,46 +7,36 @@ import { fileURLToPath } from 'url';
 import setupRoutes from './functions/routes.js';
 import startdb from './functions/database.js';
 
-// Importer les modules métier de src/
-import * as gameModule from './src/game.js';
+import * as gameModule    from './src/game.js';
 import * as actionsModule from './src/actions.js';
-import * as ruleModule from './src/rule.js';
-import * as playerModule from './src/player.js';
-import * as deckModule from './src/deck.js';
+import * as ruleModule    from './src/rule.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname  = path.dirname(__filename);
 
-const app = express();
+const app    = express();
 const server = http.createServer(app);
-const io = new Server(server);
-const port = 3000;
+const io     = new Server(server);
+const port   = 3000;
 
-// Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.get('/api/ping', (req, res) => res.json({ message: 'Serveur OK' }));
 
-// API Routes
-app.get('/api/ping', (req, res) => {
-  res.json({ message: 'Serveur OK' });
-});
-
-// Initialize custom routes and database
 setupRoutes(app);
 startdb();
 
-// ─── Stockage des lobbies et parties ─────────────
-const lobbies = new Map(); // code -> lobby
-const games = new Map(); // roomId -> gameState
-const playerSockets = new Map(); // playerId -> socket
+// ─── Stockage ─────────────────────────────────────────
+const lobbies    = new Map(); // code     -> lobby
+const games      = new Map(); // roomId   -> gameState
+const socketMeta = new Map(); // socketId -> { lobbyCode, playerName }
 
-// ─── Socket.io connection ───────────────────────
+// ─── Socket.io ────────────────────────────────────────
 io.on('connection', (socket) => {
   console.log('Nouveau joueur connecté:', socket.id);
-  playerSockets.set(socket.id, socket);
 
-  // ─── Événements de Lobby ────────────────────
-  socket.on('createLobby', ({ name, code, maxPlayers, hostId, hostName }) => {
+  // ── Lobby : créer ──────────────────────────────────
+  socket.on('createLobby', ({ name, code, maxPlayers, hostName }) => {
     try {
       if (lobbies.has(code)) {
         socket.emit('lobbyError', 'Code de lobby déjà utilisé');
@@ -54,20 +44,17 @@ io.on('connection', (socket) => {
       }
 
       const newLobby = {
-        code,
-        name,
-        maxPlayers,
-        hostId,
-        hostName,
-        players: [{ id: hostId, name: hostName }],
+        code, name, maxPlayers,
+        players: [{ socketId: socket.id, name: hostName }],
         createdAt: Date.now(),
         status: 'waiting'
       };
 
       lobbies.set(code, newLobby);
       socket.join(code);
+      socketMeta.set(socket.id, { lobbyCode: code, playerName: hostName });
 
-      console.log(`Lobby créé: ${code} - ${name}`);
+      console.log(`Lobby créé: ${code} — ${name}`);
       socket.emit('lobbyCreated', newLobby);
       io.to(code).emit('lobbyUpdated', newLobby);
     } catch (err) {
@@ -76,29 +63,22 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('joinLobbyByCode', ({ code, playerId, playerName }) => {
+  // ── Lobby : rejoindre par code ─────────────────────
+  socket.on('joinLobbyByCode', ({ code, playerName }) => {
     try {
       const lobby = lobbies.get(code.toUpperCase());
 
-      if (!lobby) {
-        socket.emit('lobbyError', 'Code de lobby invalide');
-        return;
-      }
+      if (!lobby) { socket.emit('lobbyError', 'Code de lobby invalide'); return; }
+      if (lobby.players.length >= lobby.maxPlayers) { socket.emit('lobbyError', 'Le lobby est plein'); return; }
 
-      if (lobby.players.length >= lobby.maxPlayers) {
-        socket.emit('lobbyError', 'Le lobby est plein');
-        return;
-      }
-
-      // Ajouter le joueur au lobby
-      lobby.players.push({ id: playerId, name: playerName });
+      lobby.players.push({ socketId: socket.id, name: playerName });
       socket.join(code);
+      socketMeta.set(socket.id, { lobbyCode: code, playerName });
 
       console.log(`${playerName} a rejoint le lobby ${code}`);
       socket.emit('joinedLobby', lobby);
       io.to(code).emit('lobbyUpdated', lobby);
 
-      // Si le lobby est plein, démarrer la partie
       if (lobby.players.length >= lobby.maxPlayers) {
         startGameFromLobby(lobby);
       }
@@ -108,6 +88,7 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── Lobby : prêt ───────────────────────────────────
   socket.on('playerReady', ({ lobbyCode }) => {
     try {
       const lobby = lobbies.get(lobbyCode);
@@ -119,198 +100,193 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ─── Événements du Jeu ──────────────────────
-  socket.on('startGame', ({ playerNames }) => {
+  // ── Rejoindre une game room après redirection ──────
+  // Game.html se charge avec un nouveau socket → il demande à rejoindre sa room
+  socket.on('rejoinGame', ({ gameRoomId, playerName }) => {
     try {
-      const gameState = gameModule.createGame(playerNames);
-      const roomId = socket.id;
-      games.set(roomId, gameState);
-      socket.join(roomId);
+      if (!games.has(gameRoomId)) {
+        socket.emit('error', 'Partie introuvable');
+        return;
+      }
+      socket.join(gameRoomId);
+      console.log(`${playerName} a rejoint la game room ${gameRoomId}`);
 
-      io.to(roomId).emit('gameStarted', { playerNames });
-      broadcastGameState(io, roomId, gameState);
-
-      console.log(`Partie créée: ${roomId} avec ${playerNames.length} joueurs`);
+      // Renvoyer l'état courant au joueur qui vient de rejoindre
+      broadcastGameState(io, gameRoomId, games.get(gameRoomId));
     } catch (err) {
-      socket.emit('error', `Erreur lors du démarrage: ${err.message}`);
+      console.error('Erreur rejoinGame:', err);
     }
   });
 
+  // ── Jeu : jouer une carte ──────────────────────────
   socket.on('playCard', ({ cardIndex }) => {
     try {
-      const roomId = Array.from(socket.rooms).find(r => games.has(r));
-      if (!roomId) {
-        socket.emit('error', 'Pas de partie active');
-        return;
-      }
+      const roomId = getGameRoom(socket);
+      if (!roomId) { socket.emit('error', 'Pas de partie active'); return; }
 
-      const gameState = games.get(roomId);
-      const currentPlayer = gameState.players[gameState.current_player];
-      const topCard = gameState.discard[gameState.discard.length - 1];
-      const cardToPlay = currentPlayer.hand[cardIndex];
+      const state      = games.get(roomId);
+      const player     = state.players[state.current_player];
+      const topCard    = state.discard[state.discard.length - 1];
+      const cardToPlay = player.hand[cardIndex];
 
-      if (!ruleModule.isPlayable(cardToPlay, topCard, gameState)) {
+      if (!cardToPlay) { socket.emit('error', 'Carte invalide'); return; }
+
+      if (!ruleModule.isPlayable(cardToPlay, topCard, state)) {
         socket.emit('error', 'Vous ne pouvez pas jouer cette carte !');
         return;
       }
 
-      actionsModule.playCard(cardIndex, currentPlayer, gameState);
-      actionsModule.nextTurn(gameState);
-      broadcastGameState(io, roomId, gameState);
+      actionsModule.playCard(cardIndex, player, state);
+
+      const isWild = cardToPlay.value === 'wild' || cardToPlay.value === 'draw4';
+      if (!isWild) {
+        actionsModule.nextTurn(state);
+      } else {
+        state.pending = 'chooseColor';
+      }
+
+      broadcastGameState(io, roomId, state);
     } catch (err) {
+      console.error('Erreur playCard:', err);
       socket.emit('error', `Erreur lors du jeu de la carte: ${err.message}`);
     }
   });
 
+  // ── Jeu : piocher ─────────────────────────────────
   socket.on('drawCard', () => {
     try {
-      const roomId = Array.from(socket.rooms).find(r => games.has(r));
-      if (!roomId) {
-        socket.emit('error', 'Pas de partie active');
-        return;
-      }
+      const roomId = getGameRoom(socket);
+      if (!roomId) { socket.emit('error', 'Pas de partie active'); return; }
 
-      const gameState = games.get(roomId);
-      const currentPlayer = gameState.players[gameState.current_player];
-
-      actionsModule.drawCard(1, currentPlayer, gameState);
-      broadcastGameState(io, roomId, gameState);
+      const state  = games.get(roomId);
+      const player = state.players[state.current_player];
+      actionsModule.drawCard(1, player, state);
+      broadcastGameState(io, roomId, state);
     } catch (err) {
+      console.error('Erreur drawCard:', err);
       socket.emit('error', `Erreur lors du tirage: ${err.message}`);
     }
   });
 
+  // ── Jeu : passer son tour ──────────────────────────
   socket.on('passTurn', () => {
     try {
-      const roomId = Array.from(socket.rooms).find(r => games.has(r));
-      if (!roomId) {
-        socket.emit('error', 'Pas de partie active');
-        return;
-      }
+      const roomId = getGameRoom(socket);
+      if (!roomId) { socket.emit('error', 'Pas de partie active'); return; }
 
-      const gameState = games.get(roomId);
-      actionsModule.nextTurn(gameState);
-      broadcastGameState(io, roomId, gameState);
+      const state = games.get(roomId);
+      actionsModule.nextTurn(state);
+      broadcastGameState(io, roomId, state);
     } catch (err) {
+      console.error('Erreur passTurn:', err);
       socket.emit('error', `Erreur lors du passage: ${err.message}`);
     }
   });
 
+  // ── Jeu : choisir une couleur ──────────────────────
   socket.on('chooseColor', ({ color }) => {
     try {
-      const roomId = Array.from(socket.rooms).find(r => games.has(r));
-      if (!roomId) {
-        socket.emit('error', 'Pas de partie active');
-        return;
-      }
+      const roomId = getGameRoom(socket);
+      if (!roomId) { socket.emit('error', 'Pas de partie active'); return; }
 
-      const gameState = games.get(roomId);
+      const validColors = ['red', 'green', 'blue', 'yellow'];
+      if (!validColors.includes(color)) { socket.emit('error', 'Couleur invalide'); return; }
 
-      if (!['red', 'green', 'blue', 'yellow'].includes(color)) {
-        socket.emit('error', 'Couleur invalide');
-        return;
-      }
-
-      gameState.wild_color = color;
-      gameState.pending = '';
-      actionsModule.nextTurn(gameState);
-      broadcastGameState(io, roomId, gameState);
+      const state      = games.get(roomId);
+      state.wild_color = color;
+      state.pending    = '';
+      actionsModule.nextTurn(state);
+      broadcastGameState(io, roomId, state);
     } catch (err) {
+      console.error('Erreur chooseColor:', err);
       socket.emit('error', `Erreur lors du choix de couleur: ${err.message}`);
     }
   });
 
+  // ── Jeu : reset ───────────────────────────────────
   socket.on('resetGame', () => {
     try {
-      const roomId = Array.from(socket.rooms).find(r => games.has(r));
-      if (!roomId) {
-        socket.emit('error', 'Pas de partie active');
-        return;
-      }
+      const roomId = getGameRoom(socket);
+      if (!roomId) { socket.emit('error', 'Pas de partie active'); return; }
 
       games.delete(roomId);
       io.to(roomId).emit('reset');
     } catch (err) {
+      console.error('Erreur resetGame:', err);
       socket.emit('error', `Erreur lors du reset: ${err.message}`);
     }
   });
 
+  // ── Déconnexion ────────────────────────────────────
   socket.on('disconnect', () => {
     console.log('Joueur déconnecté:', socket.id);
-    playerSockets.delete(socket.id);
 
-    // Nettoyer les lobbies vides
-    for (const [code, lobby] of lobbies.entries()) {
-      lobby.players = lobby.players.filter(p => p.id !== socket.id);
-      if (lobby.players.length === 0) {
-        lobbies.delete(code);
+    const meta = socketMeta.get(socket.id);
+    if (meta) {
+      const lobby = lobbies.get(meta.lobbyCode);
+      if (lobby) {
+        lobby.players = lobby.players.filter(p => p.socketId !== socket.id);
+        if (lobby.players.length === 0) lobbies.delete(meta.lobbyCode);
+        else io.to(meta.lobbyCode).emit('lobbyUpdated', lobby);
       }
+      socketMeta.delete(socket.id);
     }
   });
 });
 
-/**
- * Démarrer une partie à partir d'un lobby
- */
+// ─── Helpers ──────────────────────────────────────────
+
+function getGameRoom(socket) {
+  return Array.from(socket.rooms).find(r => games.has(r)) ?? null;
+}
+
 function startGameFromLobby(lobby) {
   try {
     const playerNames = lobby.players.map(p => p.name);
-    const gameState = gameModule.createGame(playerNames);
-    const gameRoomId = `game-${lobby.code}`;
+    const state       = gameModule.createGame(playerNames);
+    const gameRoomId  = `game-${lobby.code}`;
 
-    games.set(gameRoomId, gameState);
+    games.set(gameRoomId, state);
 
-    // Rejoindre tous les joueurs du lobby à la room de jeu
-    lobby.players.forEach(player => {
-      const socket = playerSockets.get(player.id);
-      if (socket) {
-        socket.join(gameRoomId);
-      }
-    });
+    // Notifier chaque socket du lobby — ils vont rediriger et rejoindre via rejoinGame
+    io.to(lobby.code).emit('gameStarted', { gameRoomId, playerNames });
 
-    // Annoncer le démarrage du jeu
-    io.to(gameRoomId).emit('gameStarted', { playerNames });
-    broadcastGameState(io, gameRoomId, gameState);
-
-    // Nettoyer le lobby
     lobbies.delete(lobby.code);
-
-    console.log(`Partie lancée depuis lobby ${lobby.code}`);
+    console.log(`Partie lancée depuis lobby ${lobby.code} (room: ${gameRoomId})`);
   } catch (err) {
     console.error('Erreur startGameFromLobby:', err);
   }
 }
 
-/**
- * Broadcast l'état du jeu à tous les clients d'une room
- */
-function broadcastGameState(io, roomId, gameState) {
-  const topCard = gameState.discard.length > 0
-    ? gameState.discard[gameState.discard.length - 1]
+function broadcastGameState(io, roomId, state) {
+  const topCard = state.discard.length > 0
+    ? state.discard[state.discard.length - 1]
     : null;
 
-  const playable = gameState.players[gameState.current_player]?.hand.map((card) =>
-    ruleModule.isPlayable(card, topCard, gameState)
-  ) || [];
+  const playable = state.players[state.current_player]?.hand.map(card =>
+    topCard ? ruleModule.isPlayable(card, topCard, state) : false
+  ) ?? [];
 
-  const formattedState = {
-    current_player: gameState.current_player,
-    order: gameState.order,
-    deckCount: gameState.deck.length,
-    topCard: topCard,
-    wild_color: gameState.wild_color,
-    pending: gameState.pending || '',
-    winner: gameState.winner || null,
-    players: gameState.players.map(p => ({
-      name: p.name,
+  const winner = state.players.find(p => p.hand.length === 0);
+
+  const payload = {
+    current_player: state.current_player,
+    order:          state.order,
+    deckCount:      state.deck.length,
+    topCard,
+    wild_color:     state.wild_color,
+    pending:        state.pending || '',
+    winner:         winner ? winner.name : null,
+    players: state.players.map(p => ({
+      name:      p.name,
       cardCount: p.hand.length,
-      uno: p.cardCount === 1,
-      hand: p.hand
+      uno:       p.hand.length === 1,
+      hand:      p.hand
     })),
-    playable: playable
+    playable
   };
 
-  io.to(roomId).emit('state', formattedState);
+  io.to(roomId).emit('state', payload);
 }
 
 server.listen(port, () => {

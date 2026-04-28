@@ -1,279 +1,363 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>UNO</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNO Web - Partie</title>
   <link rel="stylesheet" href="/Game/styles.css">
 </head>
+
 <body>
+<div id="app">
 
-<h1>UNO</h1>
-<div id="error-msg"></div>
-<div id="status-msg"></div>
+  <!-- TOPBAR -->
+  <header id="topbar">
+    <div class="logo-sm">UNO</div>
 
-<!-- ===== JEU ===== -->
-<div id="game-section">
+    <div id="turn-banner">En attente de la partie...</div>
 
-  <div id="winner-banner" style="display:none; font-size:1.4em; font-weight:bold; color: darkgreen; margin-bottom:10px;"></div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button id="pass-btn">Passer ›</button>
+      <div id="deck-counter">🃏 <span id="deck-count">—</span></div>
+    </div>
+  </header>
 
-  <h2>Tour de : <span id="current-player-name">—</span></h2>
-  <p>Ordre : <span id="order-display">→</span> | Pioche : <span id="deck-count">—</span> cartes</p>
+  <!-- ARENA -->
+  <section id="arena">
 
-  <hr>
+    <!-- Opponents (left) -->
+    <div id="opponents"></div>
 
-  <h2>Carte du dessus</h2>
-  <div id="top-card"></div>
-  <div id="wild-color-display" style="margin-top:4px;"></div>
+    <!-- Table center -->
+    <div id="table-center">
+      <div id="wild-color-bar">
+        <div class="dot" id="wild-dot"></div>
+        <span id="wild-label">Couleur : —</span>
+      </div>
 
-  <hr>
+      <div class="table-felt">
+        <!-- Draw pile -->
+        <div class="draw-pile" id="draw-pile" title="Piocher">
+          <span style="position:relative;z-index:1;">UNO</span>
+        </div>
 
-  <h2>Adversaires</h2>
-  <div id="opponents-list"></div>
+        <!-- Discard / top card -->
+        <div class="uno-card" id="top-card" style="cursor:default;">
+          <span class="card-label">?</span>
+        </div>
+      </div>
+    </div>
 
-  <hr>
+    <!-- Side actions (right) -->
+    <div id="side-actions">
+      <button class="action-btn danger" id="quit-btn">✕ Quitter</button>
+    </div>
 
-  <!-- Choix de couleur (wild) -->
-  <div id="color-picker" style="display:none;">
-    <strong>Choisissez une couleur :</strong><br>
-    <button class="color-btn red"    onclick="chooseColor('red')">Rouge</button>
-    <button class="color-btn green"  onclick="chooseColor('green')">Vert</button>
-    <button class="color-btn blue"   onclick="chooseColor('blue')">Bleu</button>
-    <button class="color-btn yellow" onclick="chooseColor('yellow')">Jaune</button>
+  </section>
+
+  <!-- PLAYER HAND -->
+  <div id="player-zone">
+    <div id="player-label">TA MAIN</div>
+    <div id="hand-container"></div>
   </div>
 
-  <h2>Votre main — <span id="your-name">—</span></h2>
-  <p id="your-turn-msg"></p>
-  <div id="hand"></div>
+</div>
 
-  <div style="margin-top:10px;">
-    <button onclick="doDraw()" id="draw-btn">Piocher une carte</button>
-    <button onclick="doPass()" id="pass-btn" style="display:none;">Passer le tour</button>
+<!-- UNO button -->
+<button id="uno-btn">UNO!</button>
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<!-- Waiting overlay -->
+<div class="overlay visible" id="waiting-overlay">
+  <div class="modal">
+    <h2>Connexion...</h2>
+    <div class="spinner"></div>
+    <p>En attente que la partie démarre</p>
   </div>
+</div>
 
-  <hr>
-  <button onclick="resetGame()">Recommencer</button>
+<!-- Color picker overlay -->
+<div class="overlay" id="color-overlay">
+  <div class="modal">
+    <h2>Choisis une couleur</h2>
+    <p>Tu joues une carte joker</p>
+    <div id="color-grid">
+      <button class="color-choice red"    data-color="red">🔴 Rouge</button>
+      <button class="color-choice yellow" data-color="yellow">🟡 Jaune</button>
+      <button class="color-choice blue"   data-color="blue">🔵 Bleu</button>
+      <button class="color-choice green"  data-color="green">🟢 Vert</button>
+    </div>
+  </div>
+</div>
+
+<!-- Winner overlay -->
+<div class="overlay" id="winner-overlay">
+  <div class="modal">
+    <div class="trophy">🏆</div>
+    <h2 id="winner-text">Victoire !</h2>
+    <p id="winner-sub">Partie terminée</p>
+    <button class="action-btn primary" id="reset-btn" style="width:100%;margin-top:8px;padding:16px;">
+      Rejouer
+    </button>
+    <button class="action-btn" id="quit-win-btn" style="width:100%;margin-top:8px;padding:14px;">
+      Menu principal
+    </button>
+  </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-const socket = io();
+  // ─── State ────────────────────────────────────────────
+  const socket  = io();
+  let myName     = null;
+  let myIndex    = null;
+  let gameState  = null;
+  let hasDrawn   = false;
 
-// ─── État local ─────────────────────────────────────
-let myPlayerIndex = -1;  // -1 = spectateur
-let playerNames = [];
-let lastState = null;
-let drawnThisTurn = false; // a-t-on pioché ce tour ?
+  // ─── Get current user ─────────────────────────────────
+  try {
+    const u = JSON.parse(localStorage.getItem('user'));
+    if (u?.username) myName = u.username;
+  } catch {}
 
-// ─── UI helpers ─────────────────────────────────────
-function showError(msg) {
-  document.getElementById("error-msg").textContent = msg;
-  setTimeout(() => document.getElementById("error-msg").textContent = "", 3000);
-}
-function showStatus(msg) {
-  document.getElementById("status-msg").textContent = msg;
-}
+  // ─── DOM refs ─────────────────────────────────────────
+  const turnBanner    = document.getElementById('turn-banner');
+  const deckCountEl   = document.getElementById('deck-count');
+  const topCardEl     = document.getElementById('top-card');
+  const drawPileEl    = document.getElementById('draw-pile');
+  const handContainer = document.getElementById('hand-container');
+  const opponentsEl   = document.getElementById('opponents');
+  const passBtn       = document.getElementById('pass-btn');
+  const unoBtnEl      = document.getElementById('uno-btn');
+  const wildBar       = document.getElementById('wild-color-bar');
+  const wildDot       = document.getElementById('wild-dot');
+  const wildLabel     = document.getElementById('wild-label');
+  const waitOverlay   = document.getElementById('waiting-overlay');
+  const colorOverlay  = document.getElementById('color-overlay');
+  const winnerOverlay = document.getElementById('winner-overlay');
+  const winnerText    = document.getElementById('winner-text');
+  const winnerSub     = document.getElementById('winner-sub');
+  const toastEl       = document.getElementById('toast');
 
-function cardHTML(card, index, playable) {
-  const colorMap = {
-    red:    "UNO_rouges",
-    green:  "UNO_verts",
-    blue:   "UNO_bleus",
-    yellow: "UNO_jaunes",
-  };
-  const valueMap = {
-    "0": "0", "1": "1", "2": "2", "3": "3", "4": "4",
-    "5": "5", "6": "6", "7": "7", "8": "8", "9": "9",
-    "skip":    "Skip",
-    "reverse": "Change Tour",
-    "draw2":   "+2",
-    "wild":    "Change couleur",
-    "draw4":   "+4",
-  };
-
-  let src;
-  if (card.color === "wild") {
-    const file = valueMap[card.value]; // "+4" ou "Change couleur"
-    src = `cards/UNO_others/${file}.png`;
-  } else {
-    const folder = colorMap[card.color];
-    const file = `${valueMap[card.value]} ${card.color === "red" ? "Rouge" : card.color === "green" ? "Vert" : card.color === "blue" ? "Bleu" : "Jaune"}`;
-    src = `cards/${folder}/${file}.png`;
+  // ─── Helpers ──────────────────────────────────────────
+  function showToast(msg, duration = 2500) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), duration);
   }
 
-  let cls = `card ${card.color}`;
-  let onclick = "";
-  if (playable) {
-    cls += " playable";
-    onclick = `onclick="playCard(${index})"`;
+  function colorClass(color) {
+    const map = { red:'color-red', yellow:'color-yellow', blue:'color-blue', green:'color-green', wild:'color-wild' };
+    return map[color] || 'color-wild';
   }
 
-  return `<span class="${cls}" ${onclick}>
-    <img src="${src}" style="width:50px;height:75px;display:block;" 
-         onerror="this.style.display='none';this.parentElement.textContent='${card.color} ${card.value}'" />
-  </span>`;
-}
-
-// ─── SETUP ──────────────────────────────────────────
-function setupPlayerNames() {
-  const count = parseInt(document.getElementById("player-count").value);
-  if (count < 2 || count > 8) { showError("Entre 2 et 8 joueurs."); return; }
-
-  let html = "<br><h2>Noms des joueurs</h2>";
-  for (let i = 0; i < count; i++) {
-    html += `<div><label>Joueur ${i+1} : <input type="text" id="pname_${i}" value="Joueur ${i+1}" /></label></div>`;
-  }
-  document.getElementById("name-inputs").innerHTML = html;
-  document.getElementById("start-btn-div").style.display = "block";
-}
-
-function startGame() {
-  const count = parseInt(document.getElementById("player-count").value);
-  playerNames = [];
-  for (let i = 0; i < count; i++) {
-    const v = document.getElementById(`pname_${i}`).value.trim();
-    playerNames.push(v || `Joueur ${i+1}`);
+  function cardLabel(card) {
+    const icons = { skip:'⊘', reverse:'↺', draw2:'+2', wild:'★', draw4:'+4' };
+    return icons[card.value] ?? card.value;
   }
 
-  // Le premier joueur = vous (index 0). On peut faire jouer tout le monde sur le même écran.
-  // Pour un vrai multi-joueur réseau il faudrait que chaque onglet choisisse son index.
-  // Ici : écran partagé, on voit toujours le joueur courant.
-  myPlayerIndex = 0; // sera mis à jour à chaque tour pour l'affichage
+  function buildCard(card, { playable=false, onClick=null, small=false } = {}) {
+    const el = document.createElement('div');
+    el.className = `uno-card ${colorClass(card.color)}${playable ? ' playable' : ''}`;
 
-  socket.emit("startGame", { playerNames });
-}
+    const label = document.createElement('span');
+    label.className = 'card-label';
+    label.textContent = cardLabel(card);
+    el.appendChild(label);
 
-// ─── Actions jeu ────────────────────────────────────
-function playCard(index) {
-  socket.emit("playCard", { cardIndex: index });
-  drawnThisTurn = false;
-}
-
-function doDraw() {
-  if (drawnThisTurn) { showError("Vous avez déjà pioché, passez ou jouez la carte."); return; }
-  socket.emit("drawCard");
-  drawnThisTurn = true;
-}
-
-function doPass() {
-  socket.emit("passTurn");
-  drawnThisTurn = false;
-}
-
-function chooseColor(color) {
-  socket.emit("chooseColor", { color });
-}
-
-function resetGame() {
-  socket.emit("resetGame");
-}
-
-// ─── Socket events ───────────────────────────────────
-socket.on("gameStarted", ({ playerNames: names }) => {
-  document.getElementById("setup-section").classList.remove("visible");
-  document.getElementById("game-section").classList.add("visible");
-  playerNames = names;
-  drawnThisTurn = false;
-  // Rejoindre en tant que spectateur (écran partagé)
-  socket.emit("join", { playerIndex: 0 });
-  showStatus("Partie lancée !");
-});
-
-socket.on("state", (state) => {
-  if (!state) return;
-  lastState = state;
-  renderState(state);
-});
-
-socket.on("reset", () => {
-  document.getElementById("game-section").classList.remove("visible");
-  document.getElementById("setup-section").classList.add("visible");
-  document.getElementById("winner-banner").style.display = "none";
-  document.getElementById("name-inputs").innerHTML = "";
-  document.getElementById("start-btn-div").style.display = "none";
-  lastState = null;
-  drawnThisTurn = false;
-});
-
-socket.on("error", (msg) => showError(msg));
-
-// ─── Rendu ───────────────────────────────────────────
-function renderState(state) {
-  const cp = state.current_player;
-  const currentName = state.players[cp]?.name || "—";
-  document.getElementById("current-player-name").textContent = currentName;
-  document.getElementById("order-display").textContent = state.order === 1 ? "→" : "←";
-  document.getElementById("deck-count").textContent = state.deckCount;
-
-  // Carte du dessus
-  const topCard = state.topCard;
-  document.getElementById("top-card").innerHTML = topCard ? cardHTML(topCard, -1, false) : "—";
-
-  // Couleur du wild active
-  const wcd = document.getElementById("wild-color-display");
-  if (state.wild_color) {
-    wcd.innerHTML = `Couleur active : <span class="card ${state.wild_color}" style="display:inline-block">${state.wild_color.toUpperCase()}</span>`;
-  } else {
-    wcd.textContent = "";
+    if (playable && onClick) el.addEventListener('click', onClick);
+    return el;
   }
 
-  // Victoire
-  const banner = document.getElementById("winner-banner");
-  if (state.winner) {
-    banner.style.display = "block";
-    banner.textContent = `🏆 ${state.winner} a gagné la partie !`;
-  } else {
-    banner.style.display = "none";
-  }
+  // ─── Render game state ────────────────────────────────
+  function render(state) {
+    gameState = state;
+    const isMyTurn = myIndex !== null && state.current_player === myIndex;
 
-  // Adversaires (tous sauf le joueur courant — ici on les affiche tous)
-  // En mode "écran partagé" on affiche tout le monde dans la liste
-  let oppHTML = "";
-  state.players.forEach((p, i) => {
-    const activeCls = i === cp ? "active" : "";
-    const unoTag = p.uno ? " 🔴 UNO!" : "";
-    oppHTML += `<div class="opponent ${activeCls}">${p.name} — ${p.cardCount} carte(s)${unoTag}</div>`;
-  });
-  document.getElementById("opponents-list").innerHTML = oppHTML;
+    // Turn banner
+    const currentName = state.players[state.current_player]?.name ?? '?';
+    turnBanner.textContent = isMyTurn ? '🎯 C\'EST TON TOUR !' : `Tour de ${currentName}`;
+    turnBanner.style.color = isMyTurn ? 'var(--gold)' : 'rgba(255,255,255,0.6)';
 
-  // Main du joueur actif (écran partagé = on montre toujours le joueur courant)
-  // myPlayerIndex représente le joueur dont on voit la main
-  myPlayerIndex = cp; // mode écran partagé
-  document.getElementById("your-name").textContent = state.players[cp]?.name || "—";
+    // Deck count
+    deckCountEl.textContent = state.deckCount;
 
-  const hand = state.players[cp]?.hand;
-  let handHTML = "";
-  if (hand) {
-    const playable = state.playable || [];
-    hand.forEach((card, i) => {
-      handHTML += cardHTML(card, i, playable[i]);
+    // Top card (discard)
+    topCardEl.className = 'uno-card';
+    if (state.topCard) {
+      topCardEl.classList.add(colorClass(state.topCard.color));
+      topCardEl.querySelector('.card-label').textContent = cardLabel(state.topCard);
+    } else {
+      topCardEl.querySelector('.card-label').textContent = '?';
+    }
+
+    // Wild color bar
+    if (state.wild_color) {
+      wildBar.classList.add('visible');
+      const colorMap = { red:'#e52323', yellow:'#ffd400', blue:'#006dff', green:'#00a651' };
+      const nameMap  = { red:'Rouge', yellow:'Jaune', blue:'Bleu', green:'Vert' };
+      wildDot.style.background = colorMap[state.wild_color] || '#888';
+      wildLabel.textContent = `Couleur imposée : ${nameMap[state.wild_color] ?? state.wild_color}`;
+      wildBar.style.borderColor = colorMap[state.wild_color] || '#888';
+    } else {
+      wildBar.classList.remove('visible');
+    }
+
+    // Opponents
+    opponentsEl.innerHTML = '';
+    state.players.forEach((p, i) => {
+      if (i === myIndex) return;
+      const slot = document.createElement('div');
+      const isActive = state.current_player === i;
+      const isUno    = p.cardCount === 1;
+
+      slot.className = `opponent-slot${isActive ? ' active-player' : ''}${isUno ? ' uno-alert' : ''}`;
+      slot.innerHTML = `
+        <div class="opp-avatar">${p.name[0]?.toUpperCase() ?? '?'}</div>
+        <div class="opp-info">
+          <div class="opp-name">${p.name}${isUno ? ' 🔴 UNO!' : ''}</div>
+          <div class="opp-cards">${p.cardCount} carte${p.cardCount !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="opp-hand">${Array.from({length: Math.min(p.cardCount, 10)}).map(() => '<div class="mini-card"></div>').join('')}</div>
+      `;
+      opponentsEl.appendChild(slot);
     });
+
+    // Player hand
+    handContainer.innerHTML = '';
+    const myPlayer = myIndex !== null ? state.players[myIndex] : null;
+    if (myPlayer?.hand) {
+      myPlayer.hand.forEach((card, idx) => {
+        const playable = isMyTurn && state.playable?.[idx];
+        const cardEl = buildCard(card, {
+          playable,
+          onClick: playable ? () => onPlayCard(idx, card) : null
+        });
+        // Subtle stagger
+        cardEl.style.animationDelay = `${idx * 30}ms`;
+        handContainer.appendChild(cardEl);
+      });
+    }
+
+    // Draw pile click (only on my turn, if haven't drawn yet)
+    drawPileEl.onclick = isMyTurn ? onDrawCard : null;
+    drawPileEl.style.opacity = isMyTurn ? '1' : '0.5';
+
+    // Pass button (only after drawing)
+    passBtn.classList.toggle('visible', isMyTurn && hasDrawn);
+
+    // UNO button (when I have 2 cards and it's my turn — shout before playing last)
+    const myCardCount = myPlayer?.hand?.length ?? 99;
+    unoBtnEl.classList.toggle('visible', myCardCount <= 2 && isMyTurn);
+
+    // Winner check
+    if (state.winner) {
+      const isWinner = state.winner === myName;
+      winnerText.textContent = isWinner ? '🏆 Tu as gagné !' : `${state.winner} a gagné !`;
+      winnerSub.textContent  = isWinner ? 'Bravo, UNO master !' : 'Meilleure chance la prochaine fois !';
+      winnerOverlay.classList.add('visible');
+    }
   }
-  document.getElementById("hand").innerHTML = handHTML || "(aucune carte)";
 
-  // Message tour
-  const isMyTurn = true; // toujours actif en mode partagé
-  const turnMsg = document.getElementById("your-turn-msg");
-  const drawBtn = document.getElementById("draw-btn");
-  const passBtn = document.getElementById("pass-btn");
+  // ─── Actions ──────────────────────────────────────────
+  function onPlayCard(idx, card) {
+    if (!gameState) return;
+    hasDrawn = false;
+    socket.emit('playCard', { cardIndex: idx });
 
-  if (state.winner) {
-    turnMsg.textContent = "";
-    drawBtn.style.display = "none";
-    passBtn.style.display = "none";
-  } else if (state.pending === "wild") {
-    turnMsg.textContent = "Choisissez une couleur ci-dessous.";
-    drawBtn.style.display = "none";
-    passBtn.style.display = "none";
-  } else {
-    turnMsg.textContent = `C'est le tour de ${currentName}. Cliquez sur une carte soulignée pour la jouer.`;
-    drawBtn.style.display = "inline";
-    passBtn.style.display = drawnThisTurn ? "inline" : "none";
+    // If wild/draw4, show color picker
+    if (card.value === 'wild' || card.value === 'draw4') {
+      colorOverlay.classList.add('visible');
+    }
   }
 
-  // Choix de couleur
-  document.getElementById("color-picker").style.display =
-    state.pending === "wild" ? "block" : "none";
-}
+  function onDrawCard() {
+    if (hasDrawn) { showToast('Tu as déjà pioché, passe ou joue une carte'); return; }
+    hasDrawn = true;
+    socket.emit('drawCard');
+  }
+
+  passBtn.addEventListener('click', () => {
+    hasDrawn = false;
+    socket.emit('passTurn');
+  });
+
+  unoBtnEl.addEventListener('click', () => {
+    showToast('UNO ! 🎉', 2000);
+    // UNO is declarative — handled visually for now
+  });
+
+  // Color picker
+  document.querySelectorAll('.color-choice').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const color = btn.dataset.color;
+      socket.emit('chooseColor', { color });
+      colorOverlay.classList.remove('visible');
+    });
+  });
+
+  // Reset / Quit
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    socket.emit('resetGame');
+    winnerOverlay.classList.remove('visible');
+  });
+
+  document.getElementById('quit-btn').addEventListener('click', () => {
+    window.location.href = '/homepage';
+  });
+
+  document.getElementById('quit-win-btn').addEventListener('click', () => {
+    window.location.href = '/homepage';
+  });
+
+  // ─── Socket events ────────────────────────────────────
+  socket.on('connect', () => {
+    console.log('Connecté:', socket.id);
+
+    // Nouveau socket après redirection → rejoindre la game room sauvegardée
+    const gameRoomId  = localStorage.getItem('gameRoomId');
+    const playerNames = JSON.parse(localStorage.getItem('playerNames') || '[]');
+
+    if (gameRoomId && playerNames.length > 0) {
+      // Identifier mon index immédiatement
+      myIndex = playerNames.indexOf(myName);
+      if (myIndex === -1) myIndex = 0;
+
+      // Demander au serveur de nous ajouter dans la room
+      socket.emit('rejoinGame', { gameRoomId, playerName: myName });
+
+      waitOverlay.classList.remove('visible');
+      hasDrawn = false;
+      showToast(`Partie lancée ! Tu es ${myName}`, 3000);
+    }
+  });
+
+  socket.on('state', (state) => {
+    // Reset hasDrawn when it becomes our turn
+    if (myIndex !== null && state.current_player !== myIndex) {
+      hasDrawn = false;
+    }
+    render(state);
+  });
+
+  socket.on('reset', () => {
+    winnerOverlay.classList.remove('visible');
+    waitOverlay.classList.add('visible');
+    handContainer.innerHTML = '';
+    opponentsEl.innerHTML   = '';
+    hasDrawn = false;
+    showToast('Nouvelle partie !', 2000);
+  });
+
+  socket.on('error', (msg) => {
+    showToast(`⚠ ${msg}`);
+  });
+
+  socket.on('disconnect', () => {
+    showToast('Déconnecté du serveur…', 4000);
+  });
 </script>
 </body>
 </html>
