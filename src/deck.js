@@ -14,8 +14,6 @@ export function createDeck() {
     "skip",
     "reverse",
     "draw2",
-    "wild",
-    "draw4",
   ];
 
   let deck = [];
@@ -29,9 +27,11 @@ export function createDeck() {
       }
     }
   }
+  
+  // Add wild and draw4 cards with black/wild color (no specific color)
   for (let i = 0; i < 4; i++) {
-    deck.push({ color: "wild", value: "wild" });
-    deck.push({ color: "wild", value: "draw4" });
+    deck.push({ color: "black", value: "wild" });
+    deck.push({ color: "black", value: "draw4" });
   }
 
   return deck;

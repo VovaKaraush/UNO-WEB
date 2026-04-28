@@ -23,7 +23,8 @@ export function reverse(game) {
 
 export function draw2(game) {
   //call the function drawCard(<card amount>, <next player based on current+1>, <game stats>)
-  _drawCard(2, game.players[game.current_player++], game);
+  const nextPlayerIndex = (game.current_player + game.order) % game.players.length;
+  _drawCard(2, game.players[nextPlayerIndex], game);
 }
 
 export function wild(game) {
@@ -34,7 +35,6 @@ export function wild(game) {
 }
 
 export function draw4(game) {
-  //call the function drawCard(<card amount>, <next player based on current+1>, <game stats>)
-  _drawCard(4, game.players[game.current_player++], game);
-  wild(game);
+  // Don't draw here - draw happens after color is chosen in chooseColor handler
+  // This function just marks that a draw4 was played
 }

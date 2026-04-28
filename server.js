@@ -7,12 +7,19 @@ import { fileURLToPath } from 'url';
 import setupRoutes from './functions/routes.js';
 import startdb from './functions/database.js';
 
-import * as gameModule    from './src/game.js';
-import * as actionsModule from './src/actions.js';
-import * as ruleModule    from './src/rule.js';
+import * as gameModule       from './src/game.js';
+import * as actionsModule    from './src/actions.js';
+import * as ruleModule       from './src/rule.js';
+import * as specialCards     from './src/specialCards.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
+
+// Initialize specialCards with required functions
+specialCards.init({
+  nextTurn: actionsModule.nextTurn,
+  drawCard: actionsModule.drawCard
+});
 
 const app    = express();
 const server = http.createServer(app);
@@ -193,8 +200,17 @@ io.on('connection', (socket) => {
       if (!validColors.includes(color)) { socket.emit('error', 'Couleur invalide'); return; }
 
       const state      = games.get(roomId);
+      const topCard    = state.discard[state.discard.length - 1];
       state.wild_color = color;
       state.pending    = '';
+
+
+      // si la carte jouée est un draw4, faire piocher 4 cartes au joueur suivant
+      if (topCard.value === 'draw4') {
+        const nextPlayerIndex = (state.current_player + state.order) % state.players.length;
+        actionsModule.drawCard(4, state.players[nextPlayerIndex], state);
+      }
+
       actionsModule.nextTurn(state);
       broadcastGameState(io, roomId, state);
     } catch (err) {
